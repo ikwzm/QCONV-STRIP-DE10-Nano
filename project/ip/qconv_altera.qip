@@ -1,0 +1,1 @@
+set_global_assignment -name VHDL_FILE -library QCONV [file join :quartus(qip_path) "qconv_altera.vhd"]
