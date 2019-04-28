@@ -456,7 +456,6 @@ set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_RO
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name QSYS_FILE soc_system.qsys
 set_global_assignment -name SDC_FILE DE10_NANO.sdc
-set_global_assignment -name SDC_FILE DE10_NANO.SDC
 set_global_assignment -name VERILOG_FILE DE10_NANO.v
 set_global_assignment -name QIP_FILE ip/pipework_altera.qip
 set_global_assignment -name QIP_FILE ip/qconv_altera.qip
