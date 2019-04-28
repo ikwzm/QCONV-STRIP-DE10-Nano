@@ -16,7 +16,7 @@ pipework_altera.vhd :
 	    $(ENDLIST)
 
 pipework_altera.qip : pipework_altera.vhd
-	echo 'set_global_assignment -name VHDL_FILE -library PIPEWORK [file join $::quartus(qip_path) "pipework_altera.vhd"]' > $@
+	echo 'set_global_assignment -name VHDL_FILE -library PIPEWORK [file join $$::quartus(qip_path) "pipework_altera.vhd"]' > $@
 
 qconv_altera.vhd :
 	../../qconv-strip-vhdl/PipeWork/tools/vhdl-archiver.rb -v       \
@@ -31,4 +31,4 @@ qconv_altera.vhd :
 	    $(ENDLIST)
 
 qconv_altera.qip : qconv_altera.vhd
-	echo 'set_global_assignment -name VHDL_FILE -library QCONV [file join $::quartus(qip_path) "qconv_altera.vhd"]' > $@
+	echo 'set_global_assignment -name VHDL_FILE -library QCONV [file join $$::quartus(qip_path) "qconv_altera.vhd"]' > $@
