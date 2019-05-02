@@ -499,7 +499,7 @@ end RTL;
 --!     @file    qconv_components.vhd                                            --
 --!     @brief   Quantized Convolution Component Library                         --
 --!     @version 0.1.0                                                           --
---!     @date    2019/04/27                                                      --
+--!     @date    2019/05/03                                                      --
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>                     --
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
@@ -979,7 +979,7 @@ component QCONV_STRIP_CORE
         BOTTOM_PAD_SIZE : --! @brief PAD SIZE REGISTER :
                           in  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         USE_TH          : --! @brief USE THRESHOLD REGISTER :
-                          in  std_logic;
+                          in  std_logic_vector(1 downto 0);
         PARAM_IN        : --! @brief K DATA / TH DATA INPUT FLAG :
                           in  std_logic;
         REQ_VALID       : --! @brief REQUEST VALID :
@@ -1031,7 +1031,10 @@ component QCONV_STRIP_CORE
     -------------------------------------------------------------------------------
         OUT_DATA        : --! @brief OUTPUT DATA :
                           --! OUT DATA 出力.
-                          out std_logic_vector(OUT_DATA_BITS-1 downto 0);
+                          out std_logic_vector(OUT_DATA_BITS  -1 downto 0);
+        OUT_STRB        : --! @brief OUTPUT DATA :
+                          --! OUT DATA 出力.
+                          out std_logic_vector(OUT_DATA_BITS/8-1 downto 0);
         OUT_LAST        : --! @brief OUTPUT LAST DATA :
                           --! OUT LAST 出力.
                           out std_logic;
@@ -1094,7 +1097,7 @@ component QCONV_STRIP_CONTROLLER
         K_W             : in  std_logic_vector(QCONV_PARAM.K_W_BITS         -1 downto 0);
         K_H             : in  std_logic_vector(QCONV_PARAM.K_H_BITS         -1 downto 0);
         PAD_SIZE        : in  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
-        USE_TH          : in  std_logic;
+        USE_TH          : in  std_logic_vector(1 downto 0);
         REQ_VALID       : in  std_logic;
         REQ_READY       : out std_logic;
         RES_VALID       : out std_logic;
@@ -1115,7 +1118,7 @@ component QCONV_STRIP_CONTROLLER
         CORE_R_PAD_SIZE : out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         CORE_T_PAD_SIZE : out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         CORE_B_PAD_SIZE : out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
-        CORE_USE_TH     : out std_logic;
+        CORE_USE_TH     : out std_logic_vector(1 downto 0);
         CORE_PARAM_IN   : out std_logic;
         CORE_REQ_VALID  : out std_logic;
         CORE_REQ_READY  : in  std_logic;
@@ -1172,7 +1175,7 @@ component QCONV_STRIP_CONTROLLER
         O_C_SIZE        : out std_logic_vector(QCONV_PARAM.OUT_C_BITS-1 downto 0);
         O_X_POS         : out std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
         O_X_SIZE        : out std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
-        O_USE_TH        : out std_logic;
+        O_USE_TH        : out std_logic_vector(1 downto 0);
         O_REQ_VALID     : out std_logic;
         O_REQ_READY     : in  std_logic;
         O_RES_VALID     : in  std_logic;
@@ -1274,7 +1277,7 @@ component QCONV_STRIP_REGISTERS
         PAD_SIZE        : --! @brief PAD SIZE REGISTER :
                           out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         USE_TH          : --! @brief USE THRESHOLD REGISTER :
-                          out std_logic;
+                          out std_logic_vector(1 downto 0);
     -------------------------------------------------------------------------------
     -- Quantized Convolution (strip) Request/Response Interface
     -------------------------------------------------------------------------------
@@ -2172,7 +2175,7 @@ component QCONV_STRIP_OUT_DATA_AXI_WRITER
         REQ_C_SIZE      : in  std_logic_vector(QCONV_PARAM.OUT_C_BITS-1 downto 0);
         REQ_X_POS       : in  std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
         REQ_X_SIZE      : in  std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
-        REQ_USE_TH      : in  std_logic;
+        REQ_USE_TH      : in  std_logic_vector(1 downto 0);
         REQ_READY       : out std_logic;
         RES_VALID       : out std_logic;
         RES_NONE        : out std_logic;
@@ -4550,7 +4553,7 @@ end RTL;
 --!     @file    qconv_strip_controller.vhd
 --!     @brief   Quantized Convolution (strip) Controller Module
 --!     @version 0.1.0
---!     @date    2019/4/18
+--!     @date    2019/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -4637,7 +4640,7 @@ entity  QCONV_STRIP_CONTROLLER is
         K_W             : in  std_logic_vector(QCONV_PARAM.K_W_BITS         -1 downto 0);
         K_H             : in  std_logic_vector(QCONV_PARAM.K_H_BITS         -1 downto 0);
         PAD_SIZE        : in  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
-        USE_TH          : in  std_logic;
+        USE_TH          : in  std_logic_vector(1 downto 0);
         REQ_VALID       : in  std_logic;
         REQ_READY       : out std_logic;
         RES_VALID       : out std_logic;
@@ -4658,7 +4661,7 @@ entity  QCONV_STRIP_CONTROLLER is
         CORE_R_PAD_SIZE : out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         CORE_T_PAD_SIZE : out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         CORE_B_PAD_SIZE : out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
-        CORE_USE_TH     : out std_logic;
+        CORE_USE_TH     : out std_logic_vector(1 downto 0);
         CORE_PARAM_IN   : out std_logic;
         CORE_REQ_VALID  : out std_logic;
         CORE_REQ_READY  : in  std_logic;
@@ -4715,7 +4718,7 @@ entity  QCONV_STRIP_CONTROLLER is
         O_C_SIZE        : out std_logic_vector(QCONV_PARAM.OUT_C_BITS-1 downto 0);
         O_X_POS         : out std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
         O_X_SIZE        : out std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
-        O_USE_TH        : out std_logic;
+        O_USE_TH        : out std_logic_vector(1 downto 0);
         O_REQ_VALID     : out std_logic;
         O_REQ_READY     : in  std_logic;
         O_RES_VALID     : in  std_logic;
@@ -4993,7 +4996,7 @@ begin
         ---------------------------------------------------------------------------
         conv_start         <= '1' when (state = START_STATE) else '0';
         k_data_read_start  <= '1' when (state = START_STATE) else '0';
-        th_data_read_start <= '1' when (state = START_STATE and USE_TH = '1') else '0';
+        th_data_read_start <= '1' when (state = START_STATE and USE_TH /= "00") else '0';
     end block;
     -------------------------------------------------------------------------------
     -- Quantized Convolution (strip) Main Control.
@@ -5462,7 +5465,7 @@ end RTL;
 --!     @file    qconv_strip_core.vhd
 --!     @brief   Quantized Convolution (strip) Core Module
 --!     @version 0.1.0
---!     @date    2019/4/25
+--!     @date    2019/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -5577,7 +5580,7 @@ entity  QCONV_STRIP_CORE is
         BOTTOM_PAD_SIZE : --! @brief PAD SIZE REGISTER :
                           in  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         USE_TH          : --! @brief USE THRESHOLD REGISTER :
-                          in  std_logic;
+                          in  std_logic_vector(1 downto 0);
         PARAM_IN        : --! @brief K DATA / TH DATA INPUT FLAG :
                           in  std_logic;
         REQ_VALID       : --! @brief REQUEST VALID :
@@ -5629,7 +5632,10 @@ entity  QCONV_STRIP_CORE is
     -------------------------------------------------------------------------------
         OUT_DATA        : --! @brief OUTPUT DATA :
                           --! OUT DATA 出力.
-                          out std_logic_vector(OUT_DATA_BITS-1 downto 0);
+                          out std_logic_vector(OUT_DATA_BITS  -1 downto 0);
+        OUT_STRB        : --! @brief OUTPUT DATA :
+                          --! OUT DATA 出力.
+                          out std_logic_vector(OUT_DATA_BITS/8-1 downto 0);
         OUT_LAST        : --! @brief OUTPUT LAST DATA :
                           --! OUT LAST 出力.
                           out std_logic;
@@ -5676,7 +5682,7 @@ architecture RTL of QCONV_STRIP_CORE is
               top_pad_size          :  integer range 0 to QCONV_PARAM.MAX_PAD_SIZE;
               bottom_pad_size       :  integer range 0 to QCONV_PARAM.MAX_PAD_SIZE;
               k3x3                  :  std_logic;
-              use_th                :  std_logic;
+              use_th                :  integer range 0 to 3;
               param_in              :  std_logic;
     end record;
     constant  REQ_ARGS_NULL         :  REQ_ARGS_TYPE := (
@@ -5691,7 +5697,7 @@ architecture RTL of QCONV_STRIP_CORE is
               top_pad_size          =>  0 ,
               bottom_pad_size       =>  0 ,
               k3x3                  => '0',
-              use_th                => '0',
+              use_th                =>  0 ,
               param_in              => '0'
     );
     signal    req_args              :  REQ_ARGS_TYPE;
@@ -5713,7 +5719,9 @@ architecture RTL of QCONV_STRIP_CORE is
               APPLY_TH_I_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
               APPLY_TH_O_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
               APPLY_TH_D_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
-              APPLY_TH_Q_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
+              APPLY_TH_1_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
+              APPLY_TH_2_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
+              APPLY_TH_3_STREAM     :  IMAGE_STREAM_PARAM_TYPE;
     end record;
     -------------------------------------------------------------------------------
     --
@@ -5726,7 +5734,9 @@ architecture RTL of QCONV_STRIP_CORE is
         variable  stream_shape_x            :  IMAGE_SHAPE_SIDE_TYPE;
         variable  stream_shape_y            :  IMAGE_SHAPE_SIDE_TYPE;
         constant  pass_th_q_words           :  integer := OUT_DATA_BITS / QCONV_PARAM.NBITS_OUT_DATA;
-        constant  apply_th_q_words          :  integer := OUT_DATA_BITS / QCONV_PARAM.NBITS_IN_DATA ;
+        constant  apply_th_1_words          :  integer := OUT_DATA_BITS / QCONV_PARAM.NBITS_OUT_DATA;
+        constant  apply_th_2_words          :  integer := OUT_DATA_BITS / 8;
+        constant  apply_th_3_words          :  integer := OUT_DATA_BITS / QCONV_PARAM.NBITS_IN_DATA ;
     begin
         stream_shape_in_c_by_word := NEW_IMAGE_SHAPE_SIDE_CONSTANT(9*IN_C_UNROLL                           , TRUE, TRUE);
         stream_shape_in_c         := NEW_IMAGE_SHAPE_SIDE_CONSTANT(9*IN_C_UNROLL*QCONV_PARAM.NBITS_PER_WORD, TRUE, TRUE);
@@ -5856,9 +5866,29 @@ architecture RTL of QCONV_STRIP_CORE is
         ---------------------------------------------------------------------------
         --
         ---------------------------------------------------------------------------
-        param.APPLY_TH_Q_STREAM     := NEW_IMAGE_STREAM_PARAM(
+        param.APPLY_TH_1_STREAM     := NEW_IMAGE_STREAM_PARAM(
                                           ELEM_BITS => QCONV_PARAM.NBITS_IN_DATA,
-                                          C         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(apply_th_q_words,TRUE,TRUE),
+                                          C         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(apply_th_1_words,TRUE,TRUE),
+                                          D         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(1, FALSE, FALSE),
+                                          X         => stream_shape_x,
+                                          Y         => stream_shape_y
+                                      );
+        ---------------------------------------------------------------------------
+        --
+        ---------------------------------------------------------------------------
+        param.APPLY_TH_2_STREAM     := NEW_IMAGE_STREAM_PARAM(
+                                          ELEM_BITS => QCONV_PARAM.NBITS_IN_DATA,
+                                          C         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(apply_th_2_words,TRUE,TRUE),
+                                          D         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(1, FALSE, FALSE),
+                                          X         => stream_shape_x,
+                                          Y         => stream_shape_y
+                                      );
+        ---------------------------------------------------------------------------
+        --
+        ---------------------------------------------------------------------------
+        param.APPLY_TH_3_STREAM     := NEW_IMAGE_STREAM_PARAM(
+                                          ELEM_BITS => QCONV_PARAM.NBITS_IN_DATA,
+                                          C         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(apply_th_3_words,TRUE,TRUE),
                                           D         => NEW_IMAGE_SHAPE_SIDE_CONSTANT(1, FALSE, FALSE),
                                           X         => stream_shape_x,
                                           Y         => stream_shape_y
@@ -5952,11 +5982,12 @@ architecture RTL of QCONV_STRIP_CORE is
     --
     -------------------------------------------------------------------------------
     signal    pass_th_q_data        :  std_logic_vector(PARAM.PASS_TH_Q_STREAM.DATA.SIZE-1 downto 0);
-    signal    pass_th_q_elem        :  std_logic_vector(PARAM.PASS_TH_Q_STREAM.DATA.ELEM_FIELD.SIZE-1 downto 0);
-    signal    pass_th_q_last        :  std_logic;
-    signal    pass_th_q_valid       :  std_logic;
-    signal    pass_th_q_ready       :  std_logic;
     signal    pass_th_q_busy        :  std_logic;
+    signal    pass_th_o_data        :  std_logic_vector(OUT_DATA'length-1 downto 0);
+    signal    pass_th_o_strb        :  std_logic_vector(OUT_STRB'length-1 downto 0);
+    signal    pass_th_o_last        :  std_logic;
+    signal    pass_th_o_valid       :  std_logic;
+    signal    pass_th_o_ready       :  std_logic;
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
@@ -5977,16 +6008,44 @@ architecture RTL of QCONV_STRIP_CORE is
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
-    signal    apply_th_q_data       :  std_logic_vector(PARAM.APPLY_TH_Q_STREAM.DATA.SIZE-1 downto 0);
-    signal    apply_th_q_elem       :  std_logic_vector(PARAM.APPLY_TH_Q_STREAM.DATA.ELEM_FIELD.SIZE-1 downto 0);
-    signal    apply_th_q_last       :  std_logic;
-    signal    apply_th_q_valid      :  std_logic;
-    signal    apply_th_q_ready      :  std_logic;
-    signal    apply_th_q_busy       :  std_logic;
+    signal    apply_th1_q_data      :  std_logic_vector(PARAM.APPLY_TH_1_STREAM.DATA.SIZE-1 downto 0);
+    signal    apply_th1_o_data      :  std_logic_vector(OUT_DATA'length-1 downto 0);
+    signal    apply_th1_o_strb      :  std_logic_vector(OUT_STRB'length-1 downto 0);
+    signal    apply_th1_o_last      :  std_logic;
+    signal    apply_th1_o_valid     :  std_logic;
+    signal    apply_th1_o_ready     :  std_logic;
+    signal    apply_th1_i_valid     :  std_logic;
+    signal    apply_th1_i_ready     :  std_logic;
+    signal    apply_th1_busy        :  std_logic;
+    -------------------------------------------------------------------------------
+    --
+    -------------------------------------------------------------------------------
+    signal    apply_th2_q_data      :  std_logic_vector(PARAM.APPLY_TH_2_STREAM.DATA.SIZE-1 downto 0);
+    signal    apply_th2_o_data      :  std_logic_vector(OUT_DATA'length-1 downto 0);
+    signal    apply_th2_o_strb      :  std_logic_vector(OUT_STRB'length-1 downto 0);
+    signal    apply_th2_o_last      :  std_logic;
+    signal    apply_th2_o_valid     :  std_logic;
+    signal    apply_th2_o_ready     :  std_logic;
+    signal    apply_th2_i_valid     :  std_logic;
+    signal    apply_th2_i_ready     :  std_logic;
+    signal    apply_th2_busy        :  std_logic;
+    -------------------------------------------------------------------------------
+    --
+    -------------------------------------------------------------------------------
+    signal    apply_th3_q_data      :  std_logic_vector(PARAM.APPLY_TH_3_STREAM.DATA.SIZE-1 downto 0);
+    signal    apply_th3_o_data      :  std_logic_vector(OUT_DATA'length-1 downto 0);
+    signal    apply_th3_o_strb      :  std_logic_vector(OUT_STRB'length-1 downto 0);
+    signal    apply_th3_o_last      :  std_logic;
+    signal    apply_th3_o_valid     :  std_logic;
+    signal    apply_th3_o_ready     :  std_logic;
+    signal    apply_th3_i_valid     :  std_logic;
+    signal    apply_th3_i_ready     :  std_logic;
+    signal    apply_th3_busy        :  std_logic;
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
     signal    outlet_data           :  std_logic_vector(OUT_DATA'length-1 downto 0);
+    signal    outlet_strb           :  std_logic_vector(OUT_STRB'length-1 downto 0);
     signal    outlet_last           :  std_logic;
     signal    outlet_valid          :  std_logic;
     signal    outlet_ready          :  std_logic;
@@ -6036,7 +6095,7 @@ begin
                         end if;
                     when REQ_STATE =>
                         if (intake_busy = '1' and kernel_busy = '1') and
-                           ((req_args.use_th = '1' and thresholds_busy = '1') or (req_args.use_th = '0')) then
+                           ((req_args.use_th /= 0 and thresholds_busy = '1') or (req_args.use_th = 0)) then
                             state <= RUN_STATE;
                         else
                             state <= REQ_STATE;
@@ -6071,17 +6130,17 @@ begin
             if (CLR = '1') then
                 req_args <= REQ_ARGS_NULL;
             elsif (state = IDLE_STATE and REQ_VALID = '1') then
-                req_args.in_c_by_word    <= to_integer(unsigned(IN_C_BY_WORD  ));
-                req_args.in_w            <= to_integer(unsigned(IN_W          ));
-                req_args.in_h            <= to_integer(unsigned(IN_H          ));
-                req_args.out_c           <= to_integer(unsigned(OUT_C         ));
-                req_args.out_w           <= to_integer(unsigned(OUT_W         ));
-                req_args.out_h           <= to_integer(unsigned(OUT_H         ));
-                req_args.left_pad_size   <= to_integer(unsigned(LEFT_PAD_SIZE ));
-                req_args.right_pad_size  <= to_integer(unsigned(RIGHT_PAD_SIZE));
-                req_args.top_pad_size    <= to_integer(unsigned(TOP_PAD_SIZE  ));
+                req_args.in_c_by_word    <= to_integer(unsigned(IN_C_BY_WORD   ));
+                req_args.in_w            <= to_integer(unsigned(IN_W           ));
+                req_args.in_h            <= to_integer(unsigned(IN_H           ));
+                req_args.out_c           <= to_integer(unsigned(OUT_C          ));
+                req_args.out_w           <= to_integer(unsigned(OUT_W          ));
+                req_args.out_h           <= to_integer(unsigned(OUT_H          ));
+                req_args.left_pad_size   <= to_integer(unsigned(LEFT_PAD_SIZE  ));
+                req_args.right_pad_size  <= to_integer(unsigned(RIGHT_PAD_SIZE ));
+                req_args.top_pad_size    <= to_integer(unsigned(TOP_PAD_SIZE   ));
                 req_args.bottom_pad_size <= to_integer(unsigned(BOTTOM_PAD_SIZE));
-                req_args.use_th          <= USE_TH;
+                req_args.use_th          <= to_integer(unsigned(USE_TH         ));
                 req_args.param_in        <= PARAM_IN;
                 if (to_integer(unsigned(K_W)) = 3) and
                    (to_integer(unsigned(K_H)) = 3) then
@@ -6241,15 +6300,15 @@ begin
         elsif (CLK'event and CLK = '1') then
             if (CLR = '1') then
                 thresholds_busy <= '0';
-            elsif (state = REQ_STATE and req_args.use_th = '1' and t_req_ready = '1') then
+            elsif (state = REQ_STATE and req_args.use_th /= 0 and t_req_ready = '1') then
                 thresholds_busy <= '1';
             elsif (t_res_valid = '1' and t_res_ready = '1') then
                 thresholds_busy <= '0';
             end if;
         end if;
     end process;
-    t_req_valid <= '1' when (state = REQ_STATE and req_args.use_th = '1' and thresholds_busy = '0') else '0';
-    t_res_ready <= '1' when (state = RUN_STATE and                           thresholds_busy = '1') else '0';
+    t_req_valid <= '1' when (state = REQ_STATE and req_args.use_th /= 0 and thresholds_busy = '0') else '0';
+    t_res_ready <= '1' when (state = RUN_STATE and                          thresholds_busy = '1') else '0';
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
@@ -6329,8 +6388,8 @@ begin
     acc_d_atrb_vec    <= GET_ATRB_D_VECTOR_FROM_IMAGE_STREAM_DATA(PARAM.ACC_STREAM, acc_data);
     acc_x_atrb_vec    <= GET_ATRB_X_VECTOR_FROM_IMAGE_STREAM_DATA(PARAM.ACC_STREAM, acc_data);
     acc_y_atrb_vec    <= GET_ATRB_Y_VECTOR_FROM_IMAGE_STREAM_DATA(PARAM.ACC_STREAM, acc_data);
-    acc_ready         <= '1' when (req_args.use_th = '1' and apply_th_i_ready = '1') or
-                                  (req_args.use_th = '0' and pass_th_i_ready  = '1') else '0';
+    acc_ready         <= '1' when (req_args.use_th /= 0 and apply_th_i_ready = '1') or
+                                  (req_args.use_th  = 0 and pass_th_i_ready  = '1') else '0';
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
@@ -6351,19 +6410,35 @@ begin
             I_VALID         => pass_th_i_valid         , -- In  :
             I_READY         => pass_th_i_ready         , -- Out :
             O_DATA          => pass_th_q_data          , -- Out :
-            O_VALID         => pass_th_q_valid         , -- Out :
-            O_READY         => pass_th_q_ready           -- In  :
+            O_VALID         => pass_th_o_valid         , -- Out :
+            O_READY         => pass_th_o_ready           -- In  :
         );                                               -- 
     pass_th_i_data   <= CONVOLUTION_PIPELINE_TO_IMAGE_STREAM(PARAM.PASS_TH_I_STREAM, PARAM.ACC_STREAM, acc_data);
     pass_th_i_c_vec  <= GET_ATRB_C_VECTOR_FROM_IMAGE_STREAM_DATA(PARAM.PASS_TH_I_STREAM, pass_th_i_data);
     pass_th_i_done   <= '1' when (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.PASS_TH_I_STREAM, pass_th_i_data) and
                                   IMAGE_STREAM_DATA_IS_LAST_X(PARAM.PASS_TH_I_STREAM, pass_th_i_data) and
                                   IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.PASS_TH_I_STREAM, pass_th_i_data)) else '0';
-    pass_th_i_valid  <= '1' when (req_args.use_th = '0' and acc_valid = '1') else '0';
-    pass_th_q_elem   <= pass_th_q_data(PARAM.PASS_TH_Q_STREAM.DATA.ELEM_FIELD.HI downto PARAM.PASS_TH_Q_STREAM.DATA.ELEM_FIELD.LO);
-    pass_th_q_last   <= '1' when (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.PASS_TH_Q_STREAM, pass_th_q_data) and
-                                  IMAGE_STREAM_DATA_IS_LAST_X(PARAM.PASS_TH_Q_STREAM, pass_th_q_data) and
-                                  IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.PASS_TH_Q_STREAM, pass_th_q_data)) else '0';
+    pass_th_i_valid  <= '1' when (req_args.use_th = 0 and acc_valid = '1') else '0';
+    process (pass_th_q_data)
+        variable c_atrb : IMAGE_STREAM_ATRB_TYPE;
+    begin
+        pass_th_o_data <= pass_th_q_data(PARAM.PASS_TH_Q_STREAM.DATA.ELEM_FIELD.HI downto PARAM.PASS_TH_Q_STREAM.DATA.ELEM_FIELD.LO);
+        for i in pass_th_o_strb'range loop
+            c_atrb := GET_ATRB_C_FROM_IMAGE_STREAM_DATA(PARAM.PASS_TH_Q_STREAM, i/(PARAM.PASS_TH_Q_STREAM.ELEM_BITS/8), pass_th_q_data);
+            if (c_atrb.valid) then
+                pass_th_o_strb(i) <= '1';
+            else
+                pass_th_o_strb(i) <= '0';
+            end if;
+        end loop;
+        if (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.PASS_TH_Q_STREAM, pass_th_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_X(PARAM.PASS_TH_Q_STREAM, pass_th_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.PASS_TH_Q_STREAM, pass_th_q_data) = TRUE) then
+            pass_th_o_last <= '1';
+        else
+            pass_th_o_last <= '0';
+        end if;
+    end process;
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
@@ -6389,15 +6464,28 @@ begin
             O_VALID         => apply_th_o_valid        , -- Out :
             O_READY         => apply_th_o_ready          -- In  :
         );                                               -- 
-    apply_th_i_data  <= acc_data;
-    apply_th_i_valid <= '1' when (req_args.use_th = '1' and acc_valid = '1') else '0';
+    apply_th_i_data   <= acc_data;
+    apply_th_i_valid  <= '1' when (req_args.use_th /= 0 and acc_valid = '1') else '0';
+    apply_th_o_ready  <= '1' when (req_args.use_th  = 1 and apply_th1_i_ready = '1') or
+                                  (req_args.use_th  = 2 and apply_th2_i_ready = '1') or
+                                  (req_args.use_th  = 3 and apply_th3_i_ready = '1') else '0';
+    apply_th1_i_valid <= '1' when (req_args.use_th  = 1 and apply_th_o_valid  = '1') else '0';
+    apply_th2_i_valid <= '1' when (req_args.use_th  = 2 and apply_th_o_valid  = '1') else '0';
+    apply_th3_i_valid <= '1' when (req_args.use_th  = 3 and apply_th_o_valid  = '1') else '0';
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
-    APPLY_QUEUE: IMAGE_STREAM_CHANNEL_REDUCER            -- 
+    apply_th_d_data  <= CONVOLUTION_PIPELINE_TO_IMAGE_STREAM(PARAM.APPLY_TH_D_STREAM, PARAM.APPLY_TH_O_STREAM, apply_th_o_data);
+    apply_th_d_done  <= '1' when (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.APPLY_TH_D_STREAM, apply_th_d_data) and
+                                  IMAGE_STREAM_DATA_IS_LAST_X(PARAM.APPLY_TH_D_STREAM, apply_th_d_data) and
+                                  IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.APPLY_TH_D_STREAM, apply_th_d_data)) else '0';
+    -------------------------------------------------------------------------------
+    --
+    -------------------------------------------------------------------------------
+    APPLY_Q1: IMAGE_STREAM_CHANNEL_REDUCER               -- 
         generic map (                                    -- 
             I_PARAM         => PARAM.APPLY_TH_D_STREAM , --
-            O_PARAM         => PARAM.APPLY_TH_Q_STREAM , --
+            O_PARAM         => PARAM.APPLY_TH_1_STREAM , --
             C_SIZE          => 0                       , --
             C_DONE          => 0                         --
         )                                                -- 
@@ -6405,50 +6493,216 @@ begin
             CLK             => CLK                     , -- In  :
             RST             => RST                     , -- In  :
             CLR             => CLR                     , -- In  :
-            BUSY            => apply_th_q_busy         , -- Out :
+            BUSY            => apply_th1_busy          , -- Out :
             I_DATA          => apply_th_d_data         , -- In  :
             I_DONE          => apply_th_d_done         , -- In  :
-            I_VALID         => apply_th_o_valid        , -- In  :
-            I_READY         => apply_th_o_ready        , -- Out :
-            O_DATA          => apply_th_q_data         , -- Out :
-            O_VALID         => apply_th_q_valid        , -- Out :
-            O_READY         => apply_th_q_ready          -- In  :
+            I_VALID         => apply_th1_i_valid       , -- In  :
+            I_READY         => apply_th1_i_ready       , -- Out :
+            O_DATA          => apply_th1_q_data        , -- Out :
+            O_VALID         => apply_th1_o_valid       , -- Out :
+            O_READY         => apply_th1_o_ready         -- In  :
         );                                               --
-    apply_th_d_data  <= CONVOLUTION_PIPELINE_TO_IMAGE_STREAM(PARAM.APPLY_TH_D_STREAM, PARAM.APPLY_TH_O_STREAM, apply_th_o_data);
-    apply_th_d_done  <= '1' when (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.APPLY_TH_D_STREAM, apply_th_d_data) and
-                                  IMAGE_STREAM_DATA_IS_LAST_X(PARAM.APPLY_TH_D_STREAM, apply_th_d_data) and
-                                  IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.APPLY_TH_D_STREAM, apply_th_d_data)) else '0';
-    apply_th_q_last  <= '1' when (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.APPLY_TH_Q_STREAM, apply_th_q_data) and
-                                  IMAGE_STREAM_DATA_IS_LAST_X(PARAM.APPLY_TH_Q_STREAM, apply_th_q_data) and
-                                  IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.APPLY_TH_Q_STREAM, apply_th_q_data)) else '0';
-    process (apply_th_q_data)
-        variable  elem_data     :  std_logic_vector(PARAM.APPLY_TH_Q_STREAM.DATA.ELEM_FIELD.SIZE-1 downto 0);
-        constant  OUT_WORD_BITS :  integer := QCONV_PARAM.NBITS_IN_DATA * QCONV_PARAM.NBITS_PER_WORD;
-        constant  OUT_WORDS     :  integer := OUT_DATA_BITS / OUT_WORD_BITS;
+    process (apply_th1_q_data)
+        constant  O_PARAM :  IMAGE_STREAM_PARAM_TYPE := NEW_IMAGE_STREAM_PARAM(
+                                 ELEM_BITS => QCONV_PARAM.NBITS_OUT_DATA     , 
+                                 C         => PARAM.APPLY_TH_1_STREAM.SHAPE.C,
+                                 D         => PARAM.APPLY_TH_1_STREAM.SHAPE.D,
+                                 X         => PARAM.APPLY_TH_1_STREAM.SHAPE.X,
+                                 Y         => PARAM.APPLY_TH_1_STREAM.SHAPE.Y
+                                 );
+        variable  elem    :  std_logic_vector(PARAM.APPLY_TH_1_STREAM.ELEM_BITS-1 downto 0);
+        variable  o_data  :  std_logic_vector(O_PARAM.DATA.SIZE                -1 downto 0);
+        variable  c_atrb  :  IMAGE_STREAM_ATRB_TYPE;
     begin
-        elem_data := apply_th_q_data(PARAM.APPLY_TH_Q_STREAM.DATA.ELEM_FIELD.HI downto PARAM.APPLY_TH_Q_STREAM.DATA.ELEM_FIELD.LO);
-        for out_pos  in 0 to OUT_WORDS-1 loop
-        for word_pos in 0 to QCONV_PARAM.NBITS_PER_WORD-1 loop
-        for data_pos in 0 to QCONV_PARAM.NBITS_IN_DATA -1 loop
-            apply_th_q_elem(out_pos*OUT_WORD_BITS + data_pos*QCONV_PARAM.NBITS_PER_WORD + word_pos) <= elem_data(out_pos*OUT_WORD_BITS + word_pos*QCONV_PARAM.NBITS_IN_DATA + data_pos);
+        for y_pos in O_PARAM.SHAPE.Y.LO to O_PARAM.SHAPE.Y.HI loop
+        for x_pos in O_PARAM.SHAPE.X.LO to O_PARAM.SHAPE.X.HI loop
+        for d_pos in O_PARAM.SHAPE.D.LO to O_PARAM.SHAPE.D.HI loop
+        for c_pos in O_PARAM.SHAPE.C.LO to O_PARAM.SHAPE.C.HI loop
+            elem := GET_ELEMENT_FROM_IMAGE_STREAM_DATA(PARAM.APPLY_TH_1_STREAM, c_pos, d_pos, x_pos, y_pos, apply_th1_q_data);
+            SET_ELEMENT_TO_IMAGE_STREAM_DATA(
+                PARAM   => O_PARAM,
+                C       => c_pos,
+                D       => d_pos,
+                X       => x_pos,
+                Y       => y_pos,
+                ELEMENT => std_logic_vector(resize(unsigned(elem), O_PARAM.ELEM_BITS)),
+                DATA    => o_data
+            );
         end loop;
         end loop;
         end loop;
+        end loop;
+        for i in apply_th1_o_strb'range loop
+            c_atrb := GET_ATRB_C_FROM_IMAGE_STREAM_DATA(PARAM.APPLY_TH_1_STREAM, i/(O_PARAM.ELEM_BITS/8), apply_th1_q_data);
+            if (c_atrb.valid) then
+                apply_th1_o_strb(i) <= '1';
+            else
+                apply_th1_o_strb(i) <= '0';
+            end if;
+        end loop;
+        apply_th1_o_data <= o_data(O_PARAM.DATA.ELEM_FIELD.HI downto O_PARAM.DATA.ELEM_FIELD.LO);
+        if (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.APPLY_TH_1_STREAM, apply_th1_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_X(PARAM.APPLY_TH_1_STREAM, apply_th1_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.APPLY_TH_1_STREAM, apply_th1_q_data) = TRUE) then
+            apply_th1_o_last <= '1';
+        else
+            apply_th1_o_last <= '0';
+        end if;
     end process;
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
-    outlet_data  <= apply_th_q_elem when (req_args.use_th = '1') else pass_th_q_elem;
-    outlet_valid <= '1' when (req_args.use_th = '1' and apply_th_q_valid = '1') or
-                             (req_args.use_th = '0' and pass_th_q_valid  = '1') else '0';
-    outlet_last  <= '1' when (req_args.use_th = '1' and apply_th_q_last  = '1') or
-                             (req_args.use_th = '0' and pass_th_q_last   = '1') else '0';
-    apply_th_q_ready <= '1' when (req_args.use_th = '1' and outlet_ready = '1') else '0';
-    pass_th_q_ready  <= '1' when (req_args.use_th = '0' and outlet_ready = '1') else '0';
+    APPLY_Q2: IMAGE_STREAM_CHANNEL_REDUCER               -- 
+        generic map (                                    -- 
+            I_PARAM         => PARAM.APPLY_TH_D_STREAM , --
+            O_PARAM         => PARAM.APPLY_TH_2_STREAM , --
+            C_SIZE          => 0                       , --
+            C_DONE          => 0                         --
+        )                                                -- 
+        port map (                                       -- 
+            CLK             => CLK                     , -- In  :
+            RST             => RST                     , -- In  :
+            CLR             => CLR                     , -- In  :
+            BUSY            => apply_th2_busy          , -- Out :
+            I_DATA          => apply_th_d_data         , -- In  :
+            I_DONE          => apply_th_d_done         , -- In  :
+            I_VALID         => apply_th2_i_valid       , -- In  :
+            I_READY         => apply_th2_i_ready       , -- Out :
+            O_DATA          => apply_th2_q_data        , -- Out :
+            O_VALID         => apply_th2_o_valid       , -- Out :
+            O_READY         => apply_th2_o_ready         -- In  :
+        );                                               --
+    process (apply_th2_q_data)
+        constant  O_PARAM :  IMAGE_STREAM_PARAM_TYPE := NEW_IMAGE_STREAM_PARAM(
+                                 ELEM_BITS => 8                              , 
+                                 C         => PARAM.APPLY_TH_2_STREAM.SHAPE.C,
+                                 D         => PARAM.APPLY_TH_2_STREAM.SHAPE.D,
+                                 X         => PARAM.APPLY_TH_2_STREAM.SHAPE.X,
+                                 Y         => PARAM.APPLY_TH_2_STREAM.SHAPE.Y
+                                 );
+        variable  elem    :  std_logic_vector(PARAM.APPLY_TH_2_STREAM.ELEM_BITS-1 downto 0);
+        variable  o_data  :  std_logic_vector(O_PARAM.DATA.SIZE                -1 downto 0);
+        variable  c_atrb  :  IMAGE_STREAM_ATRB_TYPE;
+    begin
+        for y_pos in O_PARAM.SHAPE.Y.LO to O_PARAM.SHAPE.Y.HI loop
+        for x_pos in O_PARAM.SHAPE.X.LO to O_PARAM.SHAPE.X.HI loop
+        for d_pos in O_PARAM.SHAPE.D.LO to O_PARAM.SHAPE.D.HI loop
+        for c_pos in O_PARAM.SHAPE.C.LO to O_PARAM.SHAPE.C.HI loop
+            elem := GET_ELEMENT_FROM_IMAGE_STREAM_DATA(PARAM.APPLY_TH_2_STREAM, c_pos, d_pos, x_pos, y_pos, apply_th2_q_data);
+            SET_ELEMENT_TO_IMAGE_STREAM_DATA(
+                PARAM   => O_PARAM,
+                C       => c_pos,
+                D       => d_pos,
+                X       => x_pos,
+                Y       => y_pos,
+                ELEMENT => std_logic_vector(resize(unsigned(elem), O_PARAM.ELEM_BITS)),
+                DATA    => o_data
+            );
+        end loop;
+        end loop;
+        end loop;
+        end loop;
+        apply_th2_o_data <= o_data(O_PARAM.DATA.ELEM_FIELD.HI downto O_PARAM.DATA.ELEM_FIELD.LO);
+        for i in apply_th2_o_strb'range loop
+            c_atrb := GET_ATRB_C_FROM_IMAGE_STREAM_DATA(PARAM.APPLY_TH_2_STREAM, i/(O_PARAM.ELEM_BITS/8), apply_th2_q_data);
+            if (c_atrb.valid) then
+                apply_th2_o_strb(i) <= '1';
+            else
+                apply_th2_o_strb(i) <= '0';
+            end if;
+        end loop;
+        if (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.APPLY_TH_2_STREAM, apply_th2_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_X(PARAM.APPLY_TH_2_STREAM, apply_th2_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.APPLY_TH_2_STREAM, apply_th2_q_data) = TRUE) then
+            apply_th2_o_last <= '1';
+        else
+            apply_th2_o_last <= '0';
+        end if;
+    end process;
+    -------------------------------------------------------------------------------
+    --
+    -------------------------------------------------------------------------------
+    APPLY_Q3: IMAGE_STREAM_CHANNEL_REDUCER               -- 
+        generic map (                                    -- 
+            I_PARAM         => PARAM.APPLY_TH_D_STREAM , --
+            O_PARAM         => PARAM.APPLY_TH_3_STREAM , --
+            C_SIZE          => 0                       , --
+            C_DONE          => 0                         --
+        )                                                -- 
+        port map (                                       -- 
+            CLK             => CLK                     , -- In  :
+            RST             => RST                     , -- In  :
+            CLR             => CLR                     , -- In  :
+            BUSY            => apply_th3_busy          , -- Out :
+            I_DATA          => apply_th_d_data         , -- In  :
+            I_DONE          => apply_th_d_done         , -- In  :
+            I_VALID         => apply_th3_i_valid       , -- In  :
+            I_READY         => apply_th3_i_ready       , -- Out :
+            O_DATA          => apply_th3_q_data        , -- Out :
+            O_VALID         => apply_th3_o_valid       , -- Out :
+            O_READY         => apply_th3_o_ready         -- In  :
+        );                                               --
+    process (apply_th3_q_data)
+        variable  elem_data     :  std_logic_vector(PARAM.APPLY_TH_3_STREAM.DATA.ELEM_FIELD.SIZE-1 downto 0);
+        constant  OUT_WORD_BITS :  integer := QCONV_PARAM.NBITS_IN_DATA * QCONV_PARAM.NBITS_PER_WORD;
+        constant  OUT_WORD_BYTES:  integer := QCONV_PARAM.NBITS_IN_DATA * QCONV_PARAM.NBITS_PER_WORD / 8;
+        constant  OUT_WORDS     :  integer := OUT_DATA_BITS / OUT_WORD_BITS;
+        constant  OUT_STRB_ALL1 :  std_logic_vector(OUT_WORD_BYTES-1 downto 0) := (others => '1');
+        constant  OUT_STRB_ALL0 :  std_logic_vector(OUT_WORD_BYTES-1 downto 0) := (others => '0');
+        variable  c_atrb        :  IMAGE_STREAM_ATRB_TYPE;
+    begin
+        elem_data := apply_th3_q_data(PARAM.APPLY_TH_3_STREAM.DATA.ELEM_FIELD.HI downto PARAM.APPLY_TH_3_STREAM.DATA.ELEM_FIELD.LO);
+        for out_pos  in 0 to OUT_WORDS-1 loop
+        for word_pos in 0 to QCONV_PARAM.NBITS_PER_WORD-1 loop
+        for data_pos in 0 to QCONV_PARAM.NBITS_IN_DATA -1 loop
+            apply_th3_o_data(out_pos*OUT_WORD_BITS + data_pos*QCONV_PARAM.NBITS_PER_WORD + word_pos) <= elem_data(out_pos*OUT_WORD_BITS + word_pos*QCONV_PARAM.NBITS_IN_DATA + data_pos);
+        end loop;
+        end loop;
+        end loop; 
+        for out_pos  in 0 to OUT_WORDS-1 loop
+            c_atrb := GET_ATRB_C_FROM_IMAGE_STREAM_DATA(PARAM.APPLY_TH_3_STREAM, out_pos*QCONV_PARAM.NBITS_PER_WORD, apply_th3_q_data);
+            if (c_atrb.valid) then
+                apply_th3_o_strb((out_pos+1)*OUT_WORD_BYTES-1 downto out_pos*OUT_WORD_BYTES) <= OUT_STRB_ALL1;
+            else
+                apply_th3_o_strb((out_pos+1)*OUT_WORD_BYTES-1 downto out_pos*OUT_WORD_BYTES) <= OUT_STRB_ALL0;
+            end if;
+        end loop;
+        if (IMAGE_STREAM_DATA_IS_LAST_C(PARAM.APPLY_TH_3_STREAM, apply_th3_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_X(PARAM.APPLY_TH_3_STREAM, apply_th3_q_data) = TRUE) and
+           (IMAGE_STREAM_DATA_IS_LAST_Y(PARAM.APPLY_TH_3_STREAM, apply_th3_q_data) = TRUE) then
+            apply_th3_o_last <= '1';
+        else
+            apply_th3_o_last <= '0';
+        end if;
+    end process;
+    -------------------------------------------------------------------------------
+    --
+    -------------------------------------------------------------------------------
+    outlet_data  <= apply_th1_o_data when (req_args.use_th = 1) else
+                    apply_th2_o_data when (req_args.use_th = 2) else
+                    apply_th3_o_data when (req_args.use_th = 3) else pass_th_o_data;
+    outlet_strb  <= apply_th1_o_strb when (req_args.use_th = 1) else
+                    apply_th2_o_strb when (req_args.use_th = 2) else
+                    apply_th3_o_strb when (req_args.use_th = 3) else pass_th_o_strb;
+    outlet_valid <= '1' when (req_args.use_th = 3 and apply_th3_o_valid = '1') or
+                             (req_args.use_th = 2 and apply_th2_o_valid = '1') or
+                             (req_args.use_th = 1 and apply_th1_o_valid = '1') or
+                             (req_args.use_th = 1 and apply_th1_o_valid = '1') or
+                             (req_args.use_th = 0 and pass_th_o_valid   = '1') else '0';
+    outlet_last  <= '1' when (req_args.use_th = 3 and apply_th3_o_last  = '1') or
+                             (req_args.use_th = 2 and apply_th2_o_last  = '1') or
+                             (req_args.use_th = 1 and apply_th1_o_last  = '1') or
+                             (req_args.use_th = 1 and apply_th1_o_last  = '1') or
+                             (req_args.use_th = 0 and pass_th_o_last    = '1') else '0';
+    apply_th3_o_ready <= '1' when (req_args.use_th = 3 and outlet_ready = '1') else '0';
+    apply_th2_o_ready <= '1' when (req_args.use_th = 2 and outlet_ready = '1') else '0';
+    apply_th1_o_ready <= '1' when (req_args.use_th = 1 and outlet_ready = '1') else '0';
+    pass_th_o_ready   <= '1' when (req_args.use_th = 0 and outlet_ready = '1') else '0';
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
     OUT_DATA     <= outlet_data;
+    OUT_STRB     <= outlet_strb;
     OUT_VALID    <= outlet_valid;
     OUT_LAST     <= outlet_last;
     outlet_ready <= OUT_READY;
@@ -7857,7 +8111,7 @@ end RTL;
 --!     @file    qconv_strip_out_data_axi_writer.vhd
 --!     @brief   Quantized Convolution (strip) Out Data AXI Writer Module
 --!     @version 0.1.0
---!     @date    2019/4/15
+--!     @date    2019/5/3
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -7989,7 +8243,7 @@ entity  QCONV_STRIP_OUT_DATA_AXI_WRITER is
         REQ_C_SIZE      : in  std_logic_vector(QCONV_PARAM.OUT_C_BITS-1 downto 0);
         REQ_X_POS       : in  std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
         REQ_X_SIZE      : in  std_logic_vector(QCONV_PARAM.OUT_W_BITS-1 downto 0);
-        REQ_USE_TH      : in  std_logic;
+        REQ_USE_TH      : in  std_logic_vector(1 downto 0);
         REQ_READY       : out std_logic;
         RES_VALID       : out std_logic;
         RES_NONE        : out std_logic;
@@ -8073,6 +8327,8 @@ architecture RTL of QCONV_STRIP_OUT_DATA_AXI_WRITER is
     signal    req_slice_x_size      :  integer range 0 to IMAGE_SHAPE.X.MAX_SIZE;
     signal    req_elem_bytes        :  integer range 0 to IMAGE_SHAPE.ELEM_BITS/8;
     signal    req_axi_addr          :  std_logic_vector(AXI_ADDR_WIDTH-1 downto 0);
+    signal    req_ctrl_valid        :  std_logic;
+    signal    req_ctrl_ready        :  std_logic;
     -------------------------------------------------------------------------------
     -- 一回のトランザクションで転送する最大転送バイト数
     -------------------------------------------------------------------------------
@@ -8209,38 +8465,45 @@ begin
     -------------------------------------------------------------------------------
     --
     -------------------------------------------------------------------------------
-    process (REQ_USE_TH, REQ_OUT_C, REQ_C_POS, REQ_C_SIZE)
-        variable elem_bytes   :  integer;
-        variable image_c_size :  integer;
-        variable slice_c_pos  :  integer;
-        variable slice_c_size :  integer;
-        procedure CALC_C_SIZE(constant ELEM_BITS: integer) is
-        begin
-            if    (ELEM_BITS mod I_DATA_WIDTH = 0) then
-                elem_bytes   := ELEM_BITS/8;
-                image_c_size := to_integer(to_01(unsigned(REQ_OUT_C )));
-                slice_c_pos  := to_integer(to_01(unsigned(REQ_C_POS )));
-                slice_c_size := to_integer(to_01(unsigned(REQ_C_SIZE)));
-            elsif (ELEM_BITS < I_DATA_WIDTH and I_DATA_WIDTH mod ELEM_BITS = 0) then
-                elem_bytes   := I_DATA_WIDTH/8;
-                image_c_size := to_integer(to_01(unsigned(REQ_OUT_C ))) / (I_DATA_WIDTH / ELEM_BITS);
-                slice_c_pos  := to_integer(to_01(unsigned(REQ_C_POS ))) / (I_DATA_WIDTH / ELEM_BITS);
-                slice_c_size := to_integer(to_01(unsigned(REQ_C_SIZE))) / (I_DATA_WIDTH / ELEM_BITS);
-            else
-                assert (FALSE) report string'("Invalid ELEM_BITS") severity FAILURE;
+    process (CLK, RST) begin
+        if (RST = '1') then
+                req_ctrl_valid   <= '0';
+                req_elem_bytes   <=  0 ;
+                req_image_c_size <=  0 ;
+                req_slice_c_pos  <=  0 ;
+                req_slice_c_size <=  0 ;
+        elsif (CLK'event and CLK = '1') then
+            if (CLR = '1') then
+                req_ctrl_valid   <= '0';
+                req_elem_bytes   <=  0 ;
+                req_image_c_size <=  0 ;
+                req_slice_c_pos  <=  0 ;
+                req_slice_c_size <=  0 ;
+            elsif (req_ctrl_valid = '0' and REQ_VALID = '1') then
+                req_ctrl_valid <= '1';
+                case REQ_USE_TH is
+                    when "11" => 
+                        req_elem_bytes   <= QCONV_PARAM.NBITS_IN_DATA * QCONV_PARAM.NBITS_PER_WORD / 8;
+                        req_image_c_size <= to_integer(to_01(unsigned(REQ_OUT_C ))) / QCONV_PARAM.NBITS_PER_WORD;
+                        req_slice_c_pos  <= to_integer(to_01(unsigned(REQ_C_POS ))) / QCONV_PARAM.NBITS_PER_WORD;
+                        req_slice_c_size <= to_integer(to_01(unsigned(REQ_C_SIZE))) / QCONV_PARAM.NBITS_PER_WORD;
+                    when "10" => 
+                        req_elem_bytes   <= 1;
+                        req_image_c_size <= to_integer(to_01(unsigned(REQ_OUT_C )));
+                        req_slice_c_pos  <= to_integer(to_01(unsigned(REQ_C_POS )));
+                        req_slice_c_size <= to_integer(to_01(unsigned(REQ_C_SIZE)));
+                    when others => 
+                        req_elem_bytes   <= 2;
+                        req_image_c_size <= to_integer(to_01(unsigned(REQ_OUT_C )));
+                        req_slice_c_pos  <= to_integer(to_01(unsigned(REQ_C_POS )));
+                        req_slice_c_size <= to_integer(to_01(unsigned(REQ_C_SIZE)));
+                end case;
+            elsif (req_ctrl_valid = '1' and req_ctrl_ready = '1') then
+                req_ctrl_valid <= '0';
             end if;
-        end procedure;
-    begin
-        if (REQ_USE_TH = '1') then
-            CALC_C_SIZE(QCONV_PARAM.NBITS_IN_DATA );
-        else
-            CALC_C_SIZE(QCONV_PARAM.NBITS_OUT_DATA);
         end if;
-        req_elem_bytes   <= elem_bytes;
-        req_image_c_size <= image_c_size;
-        req_slice_c_pos  <= slice_c_pos;
-        req_slice_c_size <= slice_c_size;
     end process;
+    REQ_READY        <= '1' when (req_ctrl_valid = '1' and req_ctrl_ready = '1') else '0';
     req_image_x_size <= to_integer(to_01(unsigned(REQ_OUT_W )));
     req_image_y_size <= to_integer(to_01(unsigned(REQ_OUT_H )));
     req_slice_x_pos  <= to_integer(to_01(unsigned(REQ_X_POS )));
@@ -8279,8 +8542,8 @@ begin
             SLICE_Y_SIZE        => req_image_y_size    , -- In  :
             ELEM_BYTES          => req_elem_bytes      , -- In  :
             REQ_ADDR            => req_axi_addr        , -- In  :
-            REQ_VALID           => REQ_VALID           , -- In  :
-            REQ_READY           => REQ_READY           , -- Out :
+            REQ_VALID           => req_ctrl_valid      , -- In  :
+            REQ_READY           => req_ctrl_ready      , -- Out :
             RES_NONE            => RES_NONE            , -- Out :
             RES_ERROR           => RES_ERROR           , -- Out :
             RES_VALID           => RES_VALID           , -- Out :
@@ -8642,7 +8905,7 @@ end RTL;
 --!     @file    qconv_strip_registers.vhd
 --!     @brief   Quantized Convolution (strip) Registers Module
 --!     @version 0.1.0
---!     @date    2019/4/21
+--!     @date    2019/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -8771,7 +9034,7 @@ entity  QCONV_STRIP_REGISTERS is
         PAD_SIZE        : --! @brief PAD SIZE REGISTER :
                           out std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
         USE_TH          : --! @brief USE THRESHOLD REGISTER :
-                          out std_logic;
+                          out std_logic_vector(1 downto 0);
     -------------------------------------------------------------------------------
     -- Quantized Convolution (strip) Request/Response Interface
     -------------------------------------------------------------------------------
@@ -9064,7 +9327,7 @@ architecture RTL of QCONV_STRIP_REGISTERS is
     -- Quantized Convolution (strip) Use Threshold Register
     -------------------------------------------------------------------------------
     constant  USE_TH_REGS_ADDR      :  integer := REGS_BASE_ADDR + 16#88#;
-    constant  USE_TH_REGS_BITS      :  integer := 1;
+    constant  USE_TH_REGS_BITS      :  integer := 2;
     constant  USE_TH_REGS_LO        :  integer := 8*USE_TH_REGS_ADDR;
     constant  USE_TH_REGS_HI        :  integer := 8*USE_TH_REGS_ADDR   + USE_TH_REGS_BITS-1;
     constant  USE_TH_RESV_LO        :  integer := USE_TH_REGS_HI       + 1;
@@ -9457,7 +9720,7 @@ begin
     end process;
     regs_rbit(USE_TH_REGS_HI downto USE_TH_REGS_LO) <= use_th_regs;
     regs_rbit(USE_TH_RESV_HI downto USE_TH_RESV_LO) <= (USE_TH_RESV_HI downto USE_TH_RESV_LO => '0');
-    USE_TH <= use_th_regs(0);
+    USE_TH <= use_th_regs;
     -------------------------------------------------------------------------------
     -- Interrupt Request
     -------------------------------------------------------------------------------
@@ -10168,7 +10431,7 @@ end RTL;
 --!     @file    qconv_strip_axi_core.vhd
 --!     @brief   Quantized Convolution (strip) AXI I/F Core Module
 --!     @version 0.1.0
---!     @date    2019/4/27
+--!     @date    2019/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -10614,7 +10877,7 @@ architecture RTL of QCONV_STRIP_AXI_CORE is
     signal    ctrl_k_w              :  std_logic_vector(QCONV_PARAM.K_W_BITS         -1 downto 0);
     signal    ctrl_k_h              :  std_logic_vector(QCONV_PARAM.K_H_BITS         -1 downto 0);
     signal    ctrl_pad_size         :  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
-    signal    ctrl_use_th           :  std_logic;
+    signal    ctrl_use_th           :  std_logic_vector(1 downto 0);
     signal    ctrl_req_valid        :  std_logic;
     signal    ctrl_req_ready        :  std_logic;
     signal    ctrl_res_valid        :  std_logic;
@@ -10635,7 +10898,7 @@ architecture RTL of QCONV_STRIP_AXI_CORE is
     signal    core_r_pad_size       :  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
     signal    core_t_pad_size       :  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
     signal    core_b_pad_size       :  std_logic_vector(QCONV_PARAM.PAD_SIZE_BITS    -1 downto 0);
-    signal    core_use_th           :  std_logic;
+    signal    core_use_th           :  std_logic_vector(1 downto 0);
     signal    core_param_in         :  std_logic;
     signal    core_req_valid        :  std_logic;
     signal    core_req_ready        :  std_logic;
@@ -10668,7 +10931,7 @@ architecture RTL of QCONV_STRIP_AXI_CORE is
     constant  O_DATA_WIDTH          :  integer := 64;
     signal    o_data_addr           :  std_logic_vector(DATA_ADDR_WIDTH              -1 downto 0);
     signal    o_data                :  std_logic_vector(O_DATA_WIDTH                 -1 downto 0);
-    constant  o_data_strb           :  std_logic_vector(O_DATA_WIDTH/8               -1 downto 0) := (others => '1');
+    signal    o_data_strb           :  std_logic_vector(O_DATA_WIDTH/8               -1 downto 0);
     signal    o_data_last           :  std_logic;
     signal    o_data_valid          :  std_logic;
     signal    o_data_ready          :  std_logic;
@@ -10679,7 +10942,7 @@ architecture RTL of QCONV_STRIP_AXI_CORE is
     signal    o_c_size              :  std_logic_vector(QCONV_PARAM.OUT_C_BITS       -1 downto 0);
     signal    o_x_pos               :  std_logic_vector(QCONV_PARAM.OUT_W_BITS       -1 downto 0);
     signal    o_x_size              :  std_logic_vector(QCONV_PARAM.OUT_W_BITS       -1 downto 0);
-    signal    o_use_th              :  std_logic;
+    signal    o_use_th              :  std_logic_vector(1 downto 0);
     signal    o_req_valid           :  std_logic;
     signal    o_req_ready           :  std_logic;
     signal    o_res_valid           :  std_logic;
@@ -11386,6 +11649,7 @@ begin
         -- データ出力 I/F
         ---------------------------------------------------------------------------
             OUT_DATA        => o_data              , -- Out :
+            OUT_STRB        => o_data_strb         , -- Out :
             OUT_LAST        => o_data_last         , -- Out :
             OUT_VALID       => o_data_valid        , -- Out :
             OUT_READY       => o_data_ready          -- In  :
