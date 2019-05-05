@@ -118,7 +118,7 @@ void qconv_strip(unsigned k_w, unsigned k_h,
   const unsigned out_size = out_h * out_w * out_c;
   const unsigned k_size   = k_h * k_w * in_c_by_word * out_c;
   const unsigned th_size  = out_c * conv_common_params::num_thresholds;
-  bool status;
+  bool status = true;
 
   memcpy(qconv_env.in_buf.buf, (void *)in_data_packed, in_size*sizeof(T_q));
   memcpy(qconv_env.k_buf.buf , (void *)k_data_packed , k_size *sizeof(T_q));
@@ -161,16 +161,23 @@ void qconv_strip(unsigned k_w, unsigned k_h,
     qconv_env.out_buf.sync_for_cpu();
   }
 
-  memcpy(out_data, qconv_env.out_buf.buf, out_size*sizeof(T_out));
+  if        ((use_threshold == 0) || (use_threshold == 1)) {
+    memcpy(out_data, qconv_env.out_buf.buf, out_size*sizeof(T_out));
+  } else if ((use_threshold == 2)) {
+    uint8_t* buf = (uint8_t*)qconv_env.out_buf.buf;
+    for (int oc = 0; oc < out_size ; oc++) {
+      out_data[oc] = buf[oc];
+    }
+  }
 
   auto diff = end - start;
-  std::cout << "FPGA exec time: " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << " [msec]"
+  std::cout << "FPGA exec time: " << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << " [usec]"
        << std::endl;
 
   if (status == false)
-    std::cout << "error(out_size: " << out_size << ")" << std::endl;
+    std::cout << "error(out_size:   " << out_size*sizeof(T_out) << "[byte])" << std::endl;
   else
-    std::cout << "success(out_size: " << out_size << ")" << std::endl;
+    std::cout << "success(out_size: " << out_size*sizeof(T_out) << "[byte])" << std::endl;
 }
 
 bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, unsigned in_w, unsigned in_h, unsigned out_c, unsigned use_threshold, bool verbose, bool generate_scenario)
@@ -205,6 +212,7 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
   T_out *threshold_data   = NULL;
 
   bool comp_fpga          = true;
+  bool status             = true;
 
   if (verbose == true) {
     std::cout << "-------------------------------------------" << std::endl;
@@ -227,6 +235,39 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
               << "use_threshold: " << use_threshold << std::endl
               << "-------------------------------------------" << std::endl;
   }
+
+  if (in_size_packed*sizeof(T_in) > qconv_env.in_buf.buf_size) {
+    std::cerr << "Buffer overflow " << qconv_env.in_buf.name
+              << ".size("   << qconv_env.in_buf.buf_size           << "[byte])"
+              << " < require size(" << in_size_packed*sizeof(T_in) << "[byte])" << std::endl;
+    status = false;
+  }
+  if (k_size_packed*sizeof(T_q) > qconv_env.k_buf.buf_size) {
+    std::cerr << "Buffer overflow " << qconv_env.k_buf.name
+              << ".size(" << qconv_env.k_buf.buf_size              << "[byte])"
+              << " < require size(" << k_size_packed*sizeof(T_q)   << "[byte])" << std::endl;
+    status = false;
+  }
+  if (((use_threshold == 0) && (out_size*sizeof(T_out) > qconv_env.out_buf.buf_size)) ||
+      ((use_threshold == 1) && (out_size*sizeof(T_out) > qconv_env.out_buf.buf_size))) {
+    std::cerr << "Buffer overflow " << qconv_env.out_buf.name
+              << ".size(" << qconv_env.out_buf.buf_size            << "[byte])"
+              << " < require size(" << out_size*sizeof(T_out)      << "[byte])" << std::endl;
+    status = false;
+  }
+  if (((use_threshold == 2) && (out_size*sizeof(uint8_t) > qconv_env.out_buf.buf_size))) {
+    std::cerr << "Buffer overflow " << qconv_env.out_buf.name
+              << ".size(" << qconv_env.out_buf.buf_size            << "[byte])"
+              << " < require size(" << out_size*sizeof(uint8_t)    << "[byte])" << std::endl;
+    status = false;
+  }
+  if (status == false)
+    return status;
+
+  if (verbose == true) {
+    std::cout << "Data Generate..." << std::endl;
+  }
+
   if (in_type == SEQUENTIAL) {
     for (int i = 0; i < in_size     ; i++) { in_data[i] = (i % 4); }
     for (int i = 0; i < k_size * k_n; i++) { k_data[i]  = (i % 2 == 0) ? 1 : -1; }
@@ -263,9 +304,17 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
   pack_input_channel_wise(in_data, in_data_quantized, in_h, in_w, in_c, conv_common_params::nbits_in_data);
   pack_kernel_channel_wise(k_data, k_data_quantized , k_h , k_w , k_c , k_n);
   
+  if (verbose == true) {
+    std::cout << "Data Generate...done" << std::endl;
+    std::cout << "qconv strip start..." << std::endl;
+  }
+
   qconv_strip(k_w, k_h, in_data_quantized, out_data_fpga, k_data_quantized, threshold_data,
               in_w, in_h, in_c_by_word, out_w, out_h, out_c, pad_w, use_threshold);
 
+  if (verbose == true) {
+    std::cout << "qconv strip done" << std::endl;
+  }
   comp_fpga = compare_output(out_data_fpga, out_data, "qconv_strip", out_h, out_w, out_c);
 
   if (generate_scenario == true) {

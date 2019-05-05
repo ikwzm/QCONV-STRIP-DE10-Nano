@@ -64,5 +64,53 @@ file "unit_test" => ["src/tb/unit_test.cpp", "src/cpp/conv1x1.cpp", "src/cpp/con
   cpp_file_list = task.prerequisites.select{|file_name| File.extname(file_name) == '.cpp'}.join(' ')
   sh "#{CC} #{CFLAGS} -o #{task.name} #{cpp_file_list}"
 end
-  
+
+#                  type      iw  ih  ic  oc  kw  kh  use_th
+TEST_SCENARIOS = [["random",  1,  1, 32, 32,  1,  1, 0],
+                  ["random",  1,  1, 32, 32,  1,  1, 1],
+                  ["random",  8,  8, 32, 32,  1,  1, 0],
+                  ["random",  8,  8, 32, 32,  1,  1, 1],
+                  ["random", 32, 32, 32, 32,  1,  1, 0],
+                  ["random", 32, 32, 32, 32,  1,  1, 1],
+                  ["random",  1,  1, 64, 64,  1,  1, 0],
+                  ["random",  1,  1, 64, 64,  1,  1, 1],
+                  ["random", 32, 32,128,128,  1,  1, 0],
+                  ["random", 32, 32,128,128,  1,  1, 1],
+                  ["random", 64, 64, 64, 64,  1,  1, 0],
+                  ["random", 64, 64, 64, 64,  1,  1, 1],
+                  ["random",  1,  1, 32, 32,  3,  3, 0],
+                  ["random",  1,  1, 32, 32,  3,  3, 1],
+                  ["random",  8,  8, 32, 32,  3,  3, 0],
+                  ["random",  8,  8, 32, 32,  3,  3, 1],
+                  ["random", 32, 32, 32, 32,  3,  3, 0],
+                  ["random", 32, 32, 32, 32,  3,  3, 1],
+                  ["random",  1,  1, 64, 64,  3,  3, 0],
+                  ["random",  1,  1, 64, 64,  3,  3, 1],
+                  ["random", 32, 32,128,128,  3,  3, 0],
+                  ["random", 32, 32,128,128,  3,  3, 1],
+                  ["random", 64, 64, 64, 64,  3,  3, 0],
+                  ["random", 64, 64, 64, 64,  3,  3, 1]]
+test_task_list =  []
+
+TEST_SCENARIOS.each_with_index do |scenario_param, index|
+  type = scenario_param[0]
+  iw   = scenario_param[1]
+  ih   = scenario_param[2]
+  ic   = scenario_param[3]
+  oc   = scenario_param[4]
+  kw   = scenario_param[5]
+  kh   = scenario_param[6]
+  uth  = scenario_param[7]
+  task_name = sprintf("test_%03d", index).to_sym
+  test_task_list.push(task_name)
+  desc "unit_test type=#{type} iw=#{iw} ih=#{ih} ic=#{ic} oc=#{oc} kw=#{kw} kh=#{kh} use_th={uth}"
+  task task_name => ["unit_test"] do
+    sh "./unit_test -iw #{iw} -ih #{ih} -ic #{ic} -oc #{oc} -kw #{kw} -kh #{kh} -th #{uth} #{type}"
+  end
+end
+
+desc "unit_test_all"
+task :unit_test_all => test_task_list do
+end
+
 task :default => ["unit_test"]

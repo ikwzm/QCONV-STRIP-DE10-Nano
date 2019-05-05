@@ -18,23 +18,28 @@ limitations under the License.
 #include "cpp/utils.h"
 
 namespace cpp {
-namespace p = conv3x3_params;
+namespace p = conv_common_params;
 
 void conv3x3_impl(T_in in_data[], T_out out_data[], T_k k_data[], T_out threshold_data[], unsigned in_w, unsigned in_h,
                   unsigned in_c, unsigned out_w, unsigned out_h, unsigned out_c, unsigned pad, unsigned stride)
 {
-  T_k* k_local = new T_k[p::k_size * p::k_n];
-  T_out threshold_local[p::out_c][p::num_thresholds];
+  unsigned k_c            = in_c;
+  unsigned k_w            = 3;
+  unsigned k_h            = 3;
+  unsigned k_n            = out_c;
+  unsigned k_size         = k_h * k_w * k_c;
+  T_k* k_local            = new T_k[k_size * k_n];
+  T_out threshold_local[out_c][p::num_thresholds];
 
   unsigned idx_k = 0;
   unsigned idx_t = 0;
 
-  for (unsigned kn = 0; kn < p::k_n; kn++) {
-    for (unsigned k = 0; k < p::k_size; k++) { k_local[k * p::k_n + kn] = k_data[idx_k++]; }
+  for (unsigned kn = 0; kn < k_n; kn++) {
+    for (unsigned k = 0; k < k_size; k++) { k_local[k * k_n + kn] = k_data[idx_k++]; }
   }
 
   if (threshold_data != NULL) {
-    for (unsigned oc = 0; oc < p::out_c; oc++) {
+    for (unsigned oc = 0; oc < out_c; oc++) {
       for (unsigned i = 0; i < p::num_thresholds; i++) { threshold_local[oc][i] = threshold_data[idx_t++]; }
     }
   }
@@ -43,22 +48,22 @@ void conv3x3_impl(T_in in_data[], T_out out_data[], T_k k_data[], T_out threshol
 
   for (unsigned oh = 0; oh < out_h; ++oh)
     for (unsigned ow = 0; ow < out_w; ++ow) {
-      T_out out[p::k_n] = {};
+      T_out out[k_n] = {};
       unsigned idx_k_local = 0;
 
-      for (unsigned kh = 0; kh < p::k_h; kh++) {
-        for (unsigned kw = 0; kw < p::k_w; kw++) {
+      for (unsigned kh = 0; kh < k_h; kh++) {
+        for (unsigned kw = 0; kw < k_w; kw++) {
           int ih = (oh * stride) - pad + kh;
           int iw = (ow * stride) - pad + kw;
           bool valid = (iw >= 0) && (iw < int(in_w)) && (ih >= 0) && (ih < int(in_h));
 
-          for (unsigned kc = 0; kc < p::in_c; kc++) {
+          for (unsigned kc = 0; kc < in_c; kc++) {
             if (valid) {
               int idx_in = ih * in_w * in_c + iw * in_c + kc;
               T_in in_buf = in_data[idx_in];
 
-              for (int kn = 0; kn < p::k_n; kn++) {
-                T_k k_buf = k_local[idx_k_local * p::k_n + kn];
+              for (int kn = 0; kn < k_n; kn++) {
+                T_k k_buf = k_local[idx_k_local * k_n + kn];
                 out[kn] += in_buf * k_buf;
               }
             }
@@ -67,7 +72,7 @@ void conv3x3_impl(T_in in_data[], T_out out_data[], T_k k_data[], T_out threshol
         }
       }
 
-      for (int oc = 0; oc < p::out_c; oc++) {
+      for (int oc = 0; oc < out_c; oc++) {
         T_out conv_result = out[oc];
         T_out out_buf;
 
@@ -117,12 +122,17 @@ void qconv3x3_impl(T_q in_data[], T_out out_data[], T_q k_data[], T_out threshol
                    unsigned in_c_by_word, unsigned out_w, unsigned out_h, unsigned out_c, unsigned pad, unsigned stride)
 {
   unsigned idx_k = 0;
+  unsigned k_w            = 3;
+  unsigned k_h            = 3;
+  unsigned k_n            = out_c;
+  unsigned k_c_by_word    = in_c_by_word;
+  unsigned k_size_packed  = k_h * k_w * k_c_by_word * conv_common_params::nbits_k_data;
 
   for (int oc_out = 0; oc_out < out_c; oc_out += p::num_pe) {
-    T_q* k_local = new T_q[p::k_size_packed * p::num_pe];
+    T_q* k_local = new T_q[k_size_packed * p::num_pe];
 
     for (unsigned kn = 0; kn < p::num_pe; ++kn) {
-      for (unsigned k = 0; k < p::k_size_packed; ++k) { k_local[k * p::num_pe + kn] = k_data[idx_k++]; }
+      for (unsigned k = 0; k < k_size_packed; ++k) { k_local[k * p::num_pe + kn] = k_data[idx_k++]; }
     }
 
     unsigned idx_out = oc_out;
@@ -132,8 +142,8 @@ void qconv3x3_impl(T_q in_data[], T_out out_data[], T_q k_data[], T_out threshol
         T_out out[p::num_pe] = {};
         unsigned idx_k_local = 0;
 
-        for (unsigned kh = 0; kh < p::k_h; ++kh)
-          for (unsigned kw = 0; kw < p::k_w; ++kw)
+        for (unsigned kh = 0; kh < k_h; ++kh)
+          for (unsigned kw = 0; kw < k_w; ++kw)
             for (unsigned ic = 0; ic < in_c_by_word; ++ic) {
               int ih = (oh * stride) - pad + kh;
               int iw = (ow * stride) - pad + kw;

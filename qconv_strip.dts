@@ -27,7 +27,7 @@
 			udmabuf_qconv_out {
 				compatible = "ikwzm,udmabuf-0.10.a";
 				device-name = "udmabuf-qconv-out";
-				size = <0x00400000>;
+				size = <0x00800000>;
 			};
 			
 			udmabuf_qconv_k {
