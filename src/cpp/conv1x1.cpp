@@ -17,7 +17,7 @@ limitations under the License.
 #include "cpp/utils.h"
 
 namespace cpp {
-namespace p = conv1x1_params;
+namespace p = conv_common_params;
 
 void conv1x1_impl(T_in in_data[], T_out out_data[], T_k k_data[], T_out threshold_data[], unsigned in_w, unsigned in_h,
                   unsigned in_c, unsigned out_c)
@@ -28,14 +28,14 @@ void conv1x1_impl(T_in in_data[], T_out out_data[], T_k k_data[], T_out threshol
   unsigned idx_t = 0;
 
   T_k k_local[in_c][out_c];
-  T_out threshold_local[p::out_c][p::num_thresholds];
+  T_out threshold_local[out_c][p::num_thresholds];
 
   for (int oc = 0; oc < out_c; oc++) {
     for (unsigned ic = 0; ic < in_c; ic++) { k_local[ic][oc] = k_data[idx_k++]; }
   }
 
   if (threshold_data != NULL) {
-    for (unsigned oc = 0; oc < p::out_c; oc++) {
+    for (unsigned oc = 0; oc < out_c; oc++) {
       for (unsigned i = 0; i < p::num_thresholds; i++) { threshold_local[oc][i] = threshold_data[idx_t++]; }
     }
   }
