@@ -106,7 +106,6 @@ public:
 };
 
 QconvStripEnv qconv_env("uio_qconv_strip", "udmabuf-qconv-in", "udmabuf-qconv-out", "udmabuf-qconv-k", "udmabuf-qconv-th", true);
-#define MAKE_SCENARIO
 
 void qconv_strip(unsigned k_w, unsigned k_h,
                  T_q in_data_packed[], T_out out_data[], T_q k_data_packed[], T_out th_data[],
@@ -174,7 +173,7 @@ void qconv_strip(unsigned k_w, unsigned k_h,
     std::cout << "success(out_size: " << out_size << ")" << std::endl;
 }
 
-bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, unsigned in_w, unsigned in_h, unsigned out_c, unsigned use_threshold)
+bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, unsigned in_w, unsigned in_h, unsigned out_c, unsigned use_threshold, bool verbose, bool generate_scenario)
 {
   unsigned pad_w          = (k_w == 3) ? 1 : 0;
   unsigned pad_h          = (k_h == 3) ? 1 : 0;
@@ -198,7 +197,7 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
   T_in *in_data_quantized = new T_in[in_size_packed];
 
   T_k *k_data             = new T_k[k_size * k_n];
-  T_q *k_data_quantized   = new T_q[k_size * k_n];
+  T_q *k_data_quantized   = new T_q[k_size_packed * k_n];
 
   T_out *out_data         = new T_out[out_size];
   T_out *out_data_fpga    = new T_out[out_size];
@@ -207,26 +206,27 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
 
   bool comp_fpga          = true;
 
-  std::cout << "-------------------------------------------" << std::endl;
-  std::cout << "Conv" << k_h << "x" << k_w << std::endl;
-  std::cout << "-------------------------------------------" << std::endl;
-  std::cout << "Layer info" << std::endl
-            << "input: " << std::endl
-            << "  height: "  << in_h << std::endl
-            << "  width: "   << in_w << std::endl
-            << "  channel: " << in_c << std::endl
-            << "  packed channel: " << in_c_by_word << std::endl
-            << "kernel: " << std::endl
-            << "  height: "  << k_h << std::endl
-            << "  width: "   << k_w << std::endl
-            << "output: " << std::endl
-            << "  height: "  << out_h << std::endl
-            << "  width: "   << out_w << std::endl
-            << "  channel: " << out_c << std::endl
-            << "num_pe: " << conv_common_params::num_pe << std::endl
-            << "use_threshold: " << use_threshold << std::endl
-            << "-------------------------------------------" << std::endl;
-
+  if (verbose == true) {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Conv" << k_h << "x" << k_w << std::endl;
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Layer info" << std::endl
+              << "input: " << std::endl
+              << "  height: "  << in_h << std::endl
+              << "  width: "   << in_w << std::endl
+              << "  channel: " << in_c << std::endl
+              << "  packed channel: " << in_c_by_word << std::endl
+              << "kernel: " << std::endl
+              << "  height: "  << k_h << std::endl
+              << "  width: "   << k_w << std::endl
+              << "output: " << std::endl
+              << "  height: "  << out_h << std::endl
+              << "  width: "   << out_w << std::endl
+              << "  channel: " << out_c << std::endl
+              << "num_pe: " << conv_common_params::num_pe << std::endl
+              << "use_threshold: " << use_threshold << std::endl
+              << "-------------------------------------------" << std::endl;
+  }
   if (in_type == SEQUENTIAL) {
     for (int i = 0; i < in_size     ; i++) { in_data[i] = (i % 4); }
     for (int i = 0; i < k_size * k_n; i++) { k_data[i]  = (i % 2 == 0) ? 1 : -1; }
@@ -268,35 +268,35 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
 
   comp_fpga = compare_output(out_data_fpga, out_data, "qconv_strip", out_h, out_w, out_c);
 
-#ifdef MAKE_SCENARIO
-  printf(  "- I :\n");
-  printf(  "  - SET\n");
-  printf(  "  - ORG: 0x00000000\n");
-  for (int i = 0; i < in_size_packed   ; i+=2) {
-    printf("  - DW : [0x%08X, 0x%08X]\n", (uint32_t)in_data_quantized[i], (uint32_t)in_data_quantized[i+1]);
-  }
-  printf(  "- K :\n");
-  printf(  "  - SET\n");
-  printf(  "  - ORG: 0x00000000\n");
-  for (int i = 0; i < k_size_packed*k_n; i++ ) {
-    printf("  - DW : [0x%08X]\n", (uint32_t)k_data_quantized[i]);
-  }
-  if (use_threshold > 0) {
-    printf(  "- T :\n");
+  if (generate_scenario == true) {
+    printf(  "- I :\n");
     printf(  "  - SET\n");
     printf(  "  - ORG: 0x00000000\n");
-    for (int i = 0; i < out_c * conv_common_params::num_thresholds; i+=conv_common_params::num_thresholds ) {
-      printf("  - DH : [0x%04X,0x%04X,0x%04X,0x%04X] %-3d\n", (uint16_t)threshold_data[i], (uint16_t)threshold_data[i+1], (uint16_t)threshold_data[i+2], (uint16_t)threshold_data[i+3], i/4 );
+    for (int i = 0; i < in_size_packed   ; i+=2) {
+      printf("  - DW : [0x%08X, 0x%08X]\n", (uint32_t)in_data_quantized[i], (uint32_t)in_data_quantized[i+1]);
+    }
+    printf(  "- K :\n");
+    printf(  "  - SET\n");
+    printf(  "  - ORG: 0x00000000\n");
+    for (int i = 0; i < k_size_packed*k_n; i++ ) {
+      printf("  - DW : [0x%08X]\n", (uint32_t)k_data_quantized[i]);
+    }
+    if (use_threshold > 0) {
+      printf(  "- T :\n");
+      printf(  "  - SET\n");
+      printf(  "  - ORG: 0x00000000\n");
+      for (int i = 0; i < out_c * conv_common_params::num_thresholds; i+=conv_common_params::num_thresholds ) {
+        printf("  - DH : [0x%04X,0x%04X,0x%04X,0x%04X] %-3d\n", (uint16_t)threshold_data[i], (uint16_t)threshold_data[i+1], (uint16_t)threshold_data[i+2], (uint16_t)threshold_data[i+3], i/4 );
+      }
+    }
+    printf(  "- O :\n");
+    printf(  "  - CHECK\n");
+    printf(  "  - ORG: 0x00000000\n");
+    for (int i = 0; i < out_size; i++ ) {
+      char mismatch = (out_data[i] != out_data_fpga[i]) ? 'x' : ' ';
+      printf("  - DH: 0x%04X # 0x%04X %-3d %c\n", (uint16_t)out_data[i], (uint16_t)out_data_fpga[i], i, mismatch);
     }
   }
-  printf(  "- O :\n");
-  printf(  "  - CHECK\n");
-  printf(  "  - ORG: 0x00000000\n");
-  for (int i = 0; i < out_size; i++ ) {
-    char mismatch = (out_data[i] != out_data_fpga[i]) ? 'x' : ' ';
-    printf("  - DH: 0x%04X # 0x%04X %-3d %c\n", (uint16_t)out_data[i], (uint16_t)out_data_fpga[i], i, mismatch);
-  }
-  #endif
 
   delete[] in_data;
   delete[] in_data_quantized;
@@ -318,25 +318,29 @@ int main(int argc, char** argv) {
   argparse::ArgumentParser parser("unit_test", "Quntaized Convolution Strip Unit Test", "BSD 2-Clause License");
 
   parser.addArgument({"type"                       }, "Generate Type <sequential|random|all_1>");
-  parser.addArgument({"--kw"  , "--kernel-width"   }, "Kernel Width  <1|3> default=1" );
-  parser.addArgument({"--kh"  , "--kernel-height"  }, "Kernel Height <1|3> default=1" );
-  parser.addArgument({"--oc"  , "--output-channels"}, "Output Channels     default=32");
-  parser.addArgument({"--ic"  , "--input-channels" }, "Input Channels      default=32");
-  parser.addArgument({"--iw"  , "--input-width"    }, "Input Width         default=1" );
-  parser.addArgument({"--ih"  , "--input-height"   }, "Input Height        default=1" );
-  parser.addArgument({"--th"  , "--use-threshold"  }, "Use Threshold <0|1> default=0" );
+  parser.addArgument({"-kw"  , "--kernel-width"   }, "Kernel Width  <1|3> default=1" );
+  parser.addArgument({"-kh"  , "--kernel-height"  }, "Kernel Height <1|3> default=1" );
+  parser.addArgument({"-oc"  , "--output-channels"}, "Output Channels     default=32");
+  parser.addArgument({"-ic"  , "--input-channels" }, "Input Channels      default=32");
+  parser.addArgument({"-iw"  , "--input-width"    }, "Input Width         default=1" );
+  parser.addArgument({"-ih"  , "--input-height"   }, "Input Height        default=1" );
+  parser.addArgument({"-th"  , "--use-threshold"  }, "Use Threshold <0|1> default=0" );
+  parser.addArgument({"-v"   , "--verbose"        }, "Verbose Flag"          , argparse::ArgumentType::StoreTrue);
+  parser.addArgument({"--generate-scenario"       }, "Generate Scenario Flag", argparse::ArgumentType::StoreTrue);
 
   auto args = parser.parseArgs(argc, argv);
 
   input_type    in_type;
-  std::string   generate_type    = args.get<std::string> ("type");
-  unsigned int  kw               = args.safeGet<unsigned int>("kw",  1);
-  unsigned int  kh               = args.safeGet<unsigned int>("kh",  1);
-  unsigned int  oc               = args.safeGet<unsigned int>("oc", 32);
-  unsigned int  ic               = args.safeGet<unsigned int>("ic", 32);
-  unsigned int  iw               = args.safeGet<unsigned int>("iw",  1);
-  unsigned int  ih               = args.safeGet<unsigned int>("ih",  1);
-  unsigned int  th               = args.safeGet<unsigned int>("th",  0);
+  std::string   generate_type     = args.get<std::string> ("type");
+  unsigned int  kw                = args.safeGet<unsigned int>("kw",  1);
+  unsigned int  kh                = args.safeGet<unsigned int>("kh",  1);
+  unsigned int  oc                = args.safeGet<unsigned int>("oc", 32);
+  unsigned int  ic                = args.safeGet<unsigned int>("ic", 32);
+  unsigned int  iw                = args.safeGet<unsigned int>("iw",  1);
+  unsigned int  ih                = args.safeGet<unsigned int>("ih",  1);
+  unsigned int  th                = args.safeGet<unsigned int>("th",  0);
+  bool          verbose           = args.has("v");
+  bool          generate_scenario = args.has("generate-scenario");
 
   if        (generate_type == "sequential") {
     in_type = SEQUENTIAL;
@@ -350,7 +354,7 @@ int main(int argc, char** argv) {
   }
 
   bool res_conv = true;
-  res_conv &= test_conv(in_type, kw, kh, ic, iw, ih, oc, th);
+  res_conv &= test_conv(in_type, kw, kh, ic, iw, ih, oc, th, verbose, generate_scenario);
 
   return (res_conv) ? 0 : 1;
 }
