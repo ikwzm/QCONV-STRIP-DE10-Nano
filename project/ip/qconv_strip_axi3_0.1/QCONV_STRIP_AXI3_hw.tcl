@@ -92,25 +92,26 @@ set_parameter_property IO_AXI_ID_WIDTH        AFFECTS_ELABORATION true
 set_parameter_property IO_AXI_ID_WIDTH        HDL_PARAMETER       true
 
 add_parameter          IO_USE_ADDR_USER       INTEGER             1
-set_parameter_property IO_USE_ADDR_USER       DISPLAY_NAME        "In/Out Data I/F Address Sideband Signals"
+set_parameter_property IO_USE_ADDR_USER       DEFAULT_VALUE       1
+set_parameter_property IO_USE_ADDR_USER       DISPLAY_NAME        "In/Out Data I/F AXI AWUSER/ARUSER use"
 set_parameter_property IO_USE_ADDR_USER       TYPE                INTEGER
 set_parameter_property IO_USE_ADDR_USER       UNITS               None
-set_parameter_property IO_USE_ADDR_USER       DESCRIPTION         "In/Out Data I/F Address Sideband Signals"
+set_parameter_property IO_USE_ADDR_USER       DESCRIPTION         "In/Out Data I/F AXI AWUSER/ARUSER use"
 set_parameter_property IO_USE_ADDR_USER       AFFECTS_ELABORATION true
 set_parameter_property IO_USE_ADDR_USER       ALLOWED_RANGES      0:1
 set_parameter_property IO_USE_ADDR_USER       DISPLAY_HINT        "boolean"
 
 add_parameter          IO_AXI_USER_WIDTH      INTEGER             2
 set_parameter_property IO_AXI_USER_WIDTH      DEFAULT_VALUE       2
-set_parameter_property IO_AXI_USER_WIDTH      DISPLAY_NAME        "In/Out I/F AXI AWUSER/ARUSER width"
+set_parameter_property IO_AXI_USER_WIDTH      DISPLAY_NAME        "In/Out Data I/F AXI AWUSER/ARUSER width"
 set_parameter_property IO_AXI_USER_WIDTH      TYPE                INTEGER
 set_parameter_property IO_AXI_USER_WIDTH      UNITS               None
-set_parameter_property IO_AXI_USER_WIDTH      DESCRIPTION         "In/Out I/F AXI AWUSER/ARUSER width"
+set_parameter_property IO_AXI_USER_WIDTH      DESCRIPTION         "In/Out Data I/F AXI AWUSER/ARUSER width"
 set_parameter_property IO_AXI_USER_WIDTH      AFFECTS_ELABORATION true
 set_parameter_property IO_AXI_USER_WIDTH      HDL_PARAMETER       true
 
-add_parameter          I_AXI_ID               INTEGER             2
-set_parameter_property I_AXI_ID               DEFAULT_VALUE       2
+add_parameter          I_AXI_ID               INTEGER             0
+set_parameter_property I_AXI_ID               DEFAULT_VALUE       0
 set_parameter_property I_AXI_ID               DISPLAY_NAME        "In Data I/F AXI ID"
 set_parameter_property I_AXI_ID               TYPE                INTEGER
 set_parameter_property I_AXI_ID               UNITS               None
@@ -118,8 +119,8 @@ set_parameter_property I_AXI_ID               DESCRIPTION         "In Data I/F A
 set_parameter_property I_AXI_ID               AFFECTS_ELABORATION true
 set_parameter_property I_AXI_ID               HDL_PARAMETER       true
 
-add_parameter          I_AXI_PROT             INTEGER             1
-set_parameter_property I_AXI_PROT             DEFAULT_VALUE       1
+add_parameter          I_AXI_PROT             INTEGER             0
+set_parameter_property I_AXI_PROT             DEFAULT_VALUE       0
 set_parameter_property I_AXI_PROT             DISPLAY_NAME        "In Data I/F AXI PROT"
 set_parameter_property I_AXI_PROT             TYPE                INTEGER
 set_parameter_property I_AXI_PROT             UNITS               None
@@ -136,6 +137,15 @@ set_parameter_property I_AXI_CACHE            DESCRIPTION         "In Data I/F A
 set_parameter_property I_AXI_CACHE            AFFECTS_ELABORATION true
 set_parameter_property I_AXI_CACHE            HDL_PARAMETER       true
 
+add_parameter          I_AXI_AUSER            INTEGER             1
+set_parameter_property I_AXI_AUSER            DEFAULT_VALUE       1
+set_parameter_property I_AXI_AUSER            DISPLAY_NAME        "In Data I/F AXI ARUSER"
+set_parameter_property I_AXI_AUSER            TYPE                INTEGER
+set_parameter_property I_AXI_AUSER            UNITS               None
+set_parameter_property I_AXI_AUSER            DESCRIPTION         "In Data I/F AXI ARUSER"
+set_parameter_property I_AXI_AUSER            AFFECTS_ELABORATION true
+set_parameter_property I_AXI_AUSER            HDL_PARAMETER       true
+
 add_parameter          O_AXI_ID               INTEGER             0
 set_parameter_property O_AXI_ID               DEFAULT_VALUE       0
 set_parameter_property O_AXI_ID               DISPLAY_NAME        "Out Data I/F AXI ID"
@@ -145,8 +155,8 @@ set_parameter_property O_AXI_ID               DESCRIPTION         "Out Data I/F 
 set_parameter_property O_AXI_ID               AFFECTS_ELABORATION true
 set_parameter_property O_AXI_ID               HDL_PARAMETER       true
 
-add_parameter          O_AXI_PROT             INTEGER             1
-set_parameter_property O_AXI_PROT             DEFAULT_VALUE       1
+add_parameter          O_AXI_PROT             INTEGER             0
+set_parameter_property O_AXI_PROT             DEFAULT_VALUE       0
 set_parameter_property O_AXI_PROT             DISPLAY_NAME        "Out Data I/F AXI PROT"
 set_parameter_property O_AXI_PROT             TYPE                INTEGER
 set_parameter_property O_AXI_PROT             UNITS               None
@@ -162,6 +172,15 @@ set_parameter_property O_AXI_CACHE            UNITS               None
 set_parameter_property O_AXI_CACHE            DESCRIPTION         "Out Data I/F AXI CACHE"
 set_parameter_property O_AXI_CACHE            AFFECTS_ELABORATION true
 set_parameter_property O_AXI_CACHE            HDL_PARAMETER       true
+
+add_parameter          O_AXI_AUSER            INTEGER             1
+set_parameter_property O_AXI_AUSER            DEFAULT_VALUE       1
+set_parameter_property O_AXI_AUSER            DISPLAY_NAME        "Out Data I/F AXI AWUSER"
+set_parameter_property O_AXI_AUSER            TYPE                INTEGER
+set_parameter_property O_AXI_AUSER            UNITS               None
+set_parameter_property O_AXI_AUSER            DESCRIPTION         "Out Data I/F AXI AWUSER"
+set_parameter_property O_AXI_AUSER            AFFECTS_ELABORATION true
+set_parameter_property O_AXI_AUSER            HDL_PARAMETER       true
 
 add_parameter          K_AXI_ID_WIDTH         INTEGER             2
 set_parameter_property K_AXI_ID_WIDTH         DEFAULT_VALUE       2
@@ -188,10 +207,11 @@ set_parameter_property K_AXI_ADDR_WIDTH       AFFECTS_ELABORATION true
 set_parameter_property K_AXI_ADDR_WIDTH       ALLOWED_RANGES      1:64
 
 add_parameter          K_USE_ADDR_USER        INTEGER             1
-set_parameter_property K_USE_ADDR_USER        DISPLAY_NAME        "Use K Data I/F Address Sideband Signals"
+set_parameter_property K_USE_ADDR_USER        DEFAULT_VALUE       1
+set_parameter_property K_USE_ADDR_USER        DISPLAY_NAME        "K Data I/F AXI ARUSER/AWUSER use"
 set_parameter_property K_USE_ADDR_USER        TYPE                INTEGER
 set_parameter_property K_USE_ADDR_USER        UNITS               None
-set_parameter_property K_USE_ADDR_USER        DESCRIPTION         "Use K Data I/F Address Sideband Signals"
+set_parameter_property K_USE_ADDR_USER        DESCRIPTION         "K Data I/F AXI ARUSER/AWUSER use"
 set_parameter_property K_USE_ADDR_USER        AFFECTS_ELABORATION true
 set_parameter_property K_USE_ADDR_USER        ALLOWED_RANGES      0:1
 set_parameter_property K_USE_ADDR_USER        DISPLAY_HINT        "boolean"
@@ -214,8 +234,8 @@ set_parameter_property K_AXI_ID               DESCRIPTION         "K Data I/F AX
 set_parameter_property K_AXI_ID               AFFECTS_ELABORATION true
 set_parameter_property K_AXI_ID               HDL_PARAMETER       true
 
-add_parameter          K_AXI_PROT             INTEGER             1
-set_parameter_property K_AXI_PROT             DEFAULT_VALUE       1
+add_parameter          K_AXI_PROT             INTEGER             0
+set_parameter_property K_AXI_PROT             DEFAULT_VALUE       0
 set_parameter_property K_AXI_PROT             DISPLAY_NAME        "K Data I/F AXI PROT"
 set_parameter_property K_AXI_PROT             TYPE                INTEGER
 set_parameter_property K_AXI_PROT             UNITS               None
@@ -231,6 +251,15 @@ set_parameter_property K_AXI_CACHE            UNITS               None
 set_parameter_property K_AXI_CACHE            DESCRIPTION         "K Data I/F AXI CACHE"
 set_parameter_property K_AXI_CACHE            AFFECTS_ELABORATION true
 set_parameter_property K_AXI_CACHE            HDL_PARAMETER       true
+
+add_parameter          K_AXI_AUSER            INTEGER             1
+set_parameter_property K_AXI_AUSER            DEFAULT_VALUE       1
+set_parameter_property K_AXI_AUSER            DISPLAY_NAME        "K Data I/F AXI ARUSER"
+set_parameter_property K_AXI_AUSER            TYPE                INTEGER
+set_parameter_property K_AXI_AUSER            UNITS               None
+set_parameter_property K_AXI_AUSER            DESCRIPTION         "K Data I/F AXI ARUSER"
+set_parameter_property K_AXI_AUSER            AFFECTS_ELABORATION true
+set_parameter_property K_AXI_AUSER            HDL_PARAMETER       true
 
 add_parameter          T_AXI_ID_WIDTH         INTEGER             2
 set_parameter_property T_AXI_ID_WIDTH         DEFAULT_VALUE       2
@@ -257,10 +286,11 @@ set_parameter_property T_AXI_ADDR_WIDTH       AFFECTS_ELABORATION true
 set_parameter_property T_AXI_ADDR_WIDTH       ALLOWED_RANGES      1:64
 
 add_parameter          T_USE_ADDR_USER        INTEGER             1
-set_parameter_property T_USE_ADDR_USER        DISPLAY_NAME        "T Data I/F Address Sideband Signals"
+set_parameter_property T_USE_ADDR_USER        DEFAULT_VALUE       1
+set_parameter_property T_USE_ADDR_USER        DISPLAY_NAME        "T Data I/F AXI AWUSER/ARUSER use"
 set_parameter_property T_USE_ADDR_USER        TYPE                INTEGER
 set_parameter_property T_USE_ADDR_USER        UNITS               None
-set_parameter_property T_USE_ADDR_USER        DESCRIPTION         "T Data I/F Address Sideband Signals"
+set_parameter_property T_USE_ADDR_USER        DESCRIPTION         "T Data I/F AXI AWUSER/ARUSER use"
 set_parameter_property T_USE_ADDR_USER        AFFECTS_ELABORATION true
 set_parameter_property T_USE_ADDR_USER        ALLOWED_RANGES      0:1
 set_parameter_property T_USE_ADDR_USER        DISPLAY_HINT        "boolean"
@@ -274,8 +304,8 @@ set_parameter_property T_AXI_USER_WIDTH       DESCRIPTION         "T Data I/F AX
 set_parameter_property T_AXI_USER_WIDTH       AFFECTS_ELABORATION true
 set_parameter_property T_AXI_USER_WIDTH       HDL_PARAMETER       true
 
-add_parameter          T_AXI_ID               INTEGER             1
-set_parameter_property T_AXI_ID               DEFAULT_VALUE       1
+add_parameter          T_AXI_ID               INTEGER             2
+set_parameter_property T_AXI_ID               DEFAULT_VALUE       2
 set_parameter_property T_AXI_ID               DISPLAY_NAME        "T Data I/F AXI ID"
 set_parameter_property T_AXI_ID               TYPE                INTEGER
 set_parameter_property T_AXI_ID               UNITS               None
@@ -283,8 +313,8 @@ set_parameter_property T_AXI_ID               DESCRIPTION         "T Data I/F AX
 set_parameter_property T_AXI_ID               AFFECTS_ELABORATION true
 set_parameter_property T_AXI_ID               HDL_PARAMETER       true
 
-add_parameter          T_AXI_PROT             INTEGER             1
-set_parameter_property T_AXI_PROT             DEFAULT_VALUE       1
+add_parameter          T_AXI_PROT             INTEGER             0
+set_parameter_property T_AXI_PROT             DEFAULT_VALUE       0
 set_parameter_property T_AXI_PROT             DISPLAY_NAME        "T Data I/F AXI PROT"
 set_parameter_property T_AXI_PROT             TYPE                INTEGER
 set_parameter_property T_AXI_PROT             UNITS               None
@@ -300,6 +330,15 @@ set_parameter_property T_AXI_CACHE            UNITS               None
 set_parameter_property T_AXI_CACHE            DESCRIPTION         "T Data I/F AXI CACHE"
 set_parameter_property T_AXI_CACHE            AFFECTS_ELABORATION true
 set_parameter_property T_AXI_CACHE            HDL_PARAMETER       true
+
+add_parameter          T_AXI_AUSER            INTEGER             1
+set_parameter_property T_AXI_AUSER            DEFAULT_VALUE       1
+set_parameter_property T_AXI_AUSER            DISPLAY_NAME        "T Data I/F AXI ARUSER"
+set_parameter_property T_AXI_AUSER            TYPE                INTEGER
+set_parameter_property T_AXI_AUSER            UNITS               None
+set_parameter_property T_AXI_AUSER            DESCRIPTION         "T Data I/F AXI ARUSER"
+set_parameter_property T_AXI_AUSER            AFFECTS_ELABORATION true
+set_parameter_property T_AXI_AUSER            HDL_PARAMETER       true
 
 # | 
 # +-----------------------------------

@@ -1,6 +1,6 @@
 
-CC                     = "gcc"
-CFLAGS                 = ""
+CC                     = "g++"
+CFLAGS                 = "-I ./include -Wpointer-arith"
 FPGA_BITSTREAM_FILE    = "qconv_strip_axi3.rbf"
 DEVICE_TREE_FILE       = "qconv_strip.dts"
 DEVICE_TREE_NAME       = "qconv_strip"
@@ -56,12 +56,13 @@ directory DEVICE_TREE_DIRECTORY do
   Rake::Task["install"].invoke
 end
 
-file "sample1" => ["sample1.c", "sample_common.h"] do
-  sh "#{CC} #{CFLAGS} -o sample1 sample1.c"
+file "qconv_data_generator" => ["src/util/qconv_data_generator.cpp"] do
+  sh "#{CC} #{CFLAGS} -o qconv_data_generator src/util/qconv_data_generator.cpp"
+end
+
+file "unit_test" => ["src/tb/unit_test.cpp", "src/cpp/conv1x1.cpp", "src/cpp/conv3x3.cpp", "include/udmabuf.hpp", "include/uio.hpp", "include/qconv_strip.hpp" ] do |task|
+  cpp_file_list = task.prerequisites.select{|file_name| File.extname(file_name) == '.cpp'}.join(' ')
+  sh "#{CC} #{CFLAGS} -o #{task.name} #{cpp_file_list}"
 end
   
-file "sample2" => ["sample2.c", "sample_common.h"] do
-  sh "#{CC} #{CFLAGS} -o sample2 sample2.c"
-end
-  
-task :default => [DEVICE_TREE_DIRECTORY, "sample1", "sample2"]
+task :default => ["unit_test"]

@@ -289,6 +289,22 @@
          type = "String";
       }
    }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="AUTO" />
@@ -896,31 +912,35 @@
   <parameter name="IO_AXI_DATA_WIDTH" value="64" />
   <parameter name="IO_AXI_ID_WIDTH" value="2" />
   <parameter name="IO_AXI_USER_WIDTH" value="2" />
-  <parameter name="IO_USE_ADDR_USER" value="0" />
+  <parameter name="IO_USE_ADDR_USER" value="1" />
+  <parameter name="I_AXI_AUSER" value="1" />
   <parameter name="I_AXI_CACHE" value="15" />
-  <parameter name="I_AXI_ID" value="2" />
-  <parameter name="I_AXI_PROT" value="1" />
+  <parameter name="I_AXI_ID" value="0" />
+  <parameter name="I_AXI_PROT" value="0" />
   <parameter name="K_AXI_ADDR_WIDTH" value="32" />
+  <parameter name="K_AXI_AUSER" value="1" />
   <parameter name="K_AXI_CACHE" value="15" />
   <parameter name="K_AXI_DATA_WIDTH" value="64" />
   <parameter name="K_AXI_ID" value="1" />
   <parameter name="K_AXI_ID_WIDTH" value="2" />
-  <parameter name="K_AXI_PROT" value="1" />
+  <parameter name="K_AXI_PROT" value="0" />
   <parameter name="K_AXI_USER_WIDTH" value="2" />
-  <parameter name="K_USE_ADDR_USER" value="0" />
+  <parameter name="K_USE_ADDR_USER" value="1" />
   <parameter name="OUT_C_UNROLL" value="8" />
+  <parameter name="O_AXI_AUSER" value="1" />
   <parameter name="O_AXI_CACHE" value="15" />
   <parameter name="O_AXI_ID" value="0" />
-  <parameter name="O_AXI_PROT" value="1" />
+  <parameter name="O_AXI_PROT" value="0" />
   <parameter name="S_AXI_ADDR_WIDTH" value="12" />
   <parameter name="T_AXI_ADDR_WIDTH" value="32" />
+  <parameter name="T_AXI_AUSER" value="1" />
   <parameter name="T_AXI_CACHE" value="15" />
   <parameter name="T_AXI_DATA_WIDTH" value="64" />
-  <parameter name="T_AXI_ID" value="1" />
+  <parameter name="T_AXI_ID" value="2" />
   <parameter name="T_AXI_ID_WIDTH" value="2" />
-  <parameter name="T_AXI_PROT" value="1" />
+  <parameter name="T_AXI_PROT" value="0" />
   <parameter name="T_AXI_USER_WIDTH" value="2" />
-  <parameter name="T_USE_ADDR_USER" value="0" />
+  <parameter name="T_USE_ADDR_USER" value="1" />
  </module>
  <connection
    kind="avalon"

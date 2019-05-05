@@ -499,7 +499,7 @@ end RTL;
 --!     @file    qconv_components.vhd                                            --
 --!     @brief   Quantized Convolution Component Library                         --
 --!     @version 0.1.0                                                           --
---!     @date    2019/05/03                                                      --
+--!     @date    2019/05/05                                                      --
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>                     --
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
@@ -604,6 +604,8 @@ component QCONV_STRIP_AXI_CORE
                               integer := 0;
         I_AXI_CACHE         : --! @brief IN  DATA AXI REGION :
                               integer := 15;
+        I_AXI_AUSER         : --! @brief IN  DATA AXI ARUSER :
+                              integer := 0;
         I_AXI_REQ_QUEUE     : --! @brief IN  DATA AXI REQUEST QUEUE SIZE :
                               integer := 4;
         O_AXI_ADDR_WIDTH    : --! @brief OUT DATA AXI ADDRESS WIDTH :
@@ -626,6 +628,8 @@ component QCONV_STRIP_AXI_CORE
                               integer := 0;
         O_AXI_CACHE         : --! @brief OUT DATA AXI REGION :
                               integer := 15;
+        O_AXI_AUSER         : --! @brief OUT DATA AXI AWUSER :
+                              integer := 0;
         O_AXI_REQ_QUEUE     : --! @brief OUT DATA AXI REQUEST QUEUE SIZE :
                               integer := 4;
         K_AXI_ADDR_WIDTH    : --! @brief K   DATA AXI ADDRESS WIDTH :
@@ -648,6 +652,8 @@ component QCONV_STRIP_AXI_CORE
                               integer := 0;
         K_AXI_CACHE         : --! @brief K   DATA AXI REGION :
                               integer := 15;
+        K_AXI_AUSER         : --! @brief K   DATA AXI ARUSER :
+                              integer := 0;
         K_AXI_REQ_QUEUE     : --! @brief K   DATA AXI REQUEST QUEUE SIZE :
                               integer := 4;
         T_AXI_ADDR_WIDTH    : --! @brief TH  DATA AXI ADDRESS WIDTH :
@@ -670,6 +676,8 @@ component QCONV_STRIP_AXI_CORE
                               integer := 0;
         T_AXI_CACHE         : --! @brief TH  DATA AXI REGION :
                               integer := 15;
+        T_AXI_AUSER         : --! @brief TH  DATA AXI ARUSER :
+                              integer := 0;
         T_AXI_REQ_QUEUE     : --! @brief TH  DATA AXI REQUEST QUEUE SIZE :
                               integer := 1
     );
@@ -850,7 +858,7 @@ component QCONV_STRIP_AXI_CORE
         T_AXI_ARPROT        : out std_logic_vector(2 downto 0);
         T_AXI_ARQOS         : out std_logic_vector(3 downto 0);
         T_AXI_ARREGION      : out std_logic_vector(3 downto 0);
-        T_AXI_ARUSER        : out std_logic_vector(K_AXI_USER_WIDTH  -1 downto 0);
+        T_AXI_ARUSER        : out std_logic_vector(T_AXI_USER_WIDTH  -1 downto 0);
         T_AXI_ARVALID       : out std_logic;
         T_AXI_ARREADY       : in  std_logic;
     -------------------------------------------------------------------------------
@@ -1838,6 +1846,8 @@ component QCONV_STRIP_K_DATA_AXI_READER
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         REQ_ADDR_WIDTH  : --! @brief REQUEST ADDRESS WIDTH :
@@ -1929,6 +1939,8 @@ component QCONV_STRIP_IN_DATA_AXI_READER
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         REQ_ADDR_WIDTH  : --! @brief REQUEST ADDRESS WIDTH :
@@ -2020,6 +2032,8 @@ component QCONV_STRIP_TH_DATA_AXI_READER
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         REQ_ADDR_WIDTH  : --! @brief REQUEST ADDRESS WIDTH :
@@ -2109,6 +2123,8 @@ component QCONV_STRIP_OUT_DATA_AXI_WRITER
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AWUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         I_DATA_WIDTH    : --! @brief STREAM DATA WIDTH :
@@ -6711,7 +6727,7 @@ end RTL;
 --!     @file    qconv_strip_in_data_axi_reader.vhd
 --!     @brief   Quantized Convolution (strip) In Data AXI Reader Module
 --!     @version 0.1.0
---!     @date    2019/4/26
+--!     @date    2019/5/5
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -6777,6 +6793,8 @@ entity  QCONV_STRIP_IN_DATA_AXI_READER is
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         REQ_ADDR_WIDTH  : --! @brief REQUEST ADDRESS WIDTH :
@@ -6951,8 +6969,10 @@ architecture RTL of QCONV_STRIP_IN_DATA_AXI_READER is
                                     := std_logic_vector(to_unsigned(AXI_REGION, AXI4_AREGION_WIDTH));
     constant  AXI_REQ_CACHE         :  AXI4_ACACHE_TYPE
                                     := std_logic_vector(to_unsigned(AXI_CACHE , AXI4_ACACHE_WIDTH ));
-    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH -1 downto 0)
+    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH  -1 downto 0)
                                     := std_logic_vector(to_unsigned(AXI_ID    , AXI_ID_WIDTH      ));
+    constant  AXI_REQ_AUSER         :  std_logic_vector(AXI_USER_WIDTH-1 downto 0)
+                                    := std_logic_vector(to_unsigned(AXI_AUSER , AXI_USER_WIDTH    ));
     constant  AXI_REQ_LOCK          :  AXI4_ALOCK_TYPE  := (others => '0');
     constant  AXI_REQ_SPECULATIVE   :  std_logic := '1';
     constant  AXI_REQ_SAFETY        :  std_logic := '0';
@@ -7386,6 +7406,10 @@ begin
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
+    AXI_ARUSER <= AXI_REQ_AUSER;
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
     RAM: SDPRAM 
         generic map(
             DEPTH       => BUF_DEPTH+3         ,
@@ -7410,7 +7434,7 @@ end RTL;
 --!     @file    qconv_strip_k_data_axi_reader.vhd
 --!     @brief   Quantized Convolution (strip) Kernel Weight Data AXI Reader Module
 --!     @version 0.1.0
---!     @date    2019/4/26
+--!     @date    2019/5/5
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -7476,6 +7500,8 @@ entity  QCONV_STRIP_K_DATA_AXI_READER is
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         REQ_ADDR_WIDTH  : --! @brief REQUEST ADDRESS WIDTH :
@@ -7651,8 +7677,10 @@ architecture RTL of QCONV_STRIP_K_DATA_AXI_READER is
                                     := std_logic_vector(to_unsigned(AXI_REGION, AXI4_AREGION_WIDTH));
     constant  AXI_REQ_CACHE         :  AXI4_ACACHE_TYPE
                                     := std_logic_vector(to_unsigned(AXI_CACHE , AXI4_ACACHE_WIDTH ));
-    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH -1 downto 0)
+    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH  -1 downto 0)
                                     := std_logic_vector(to_unsigned(AXI_ID    , AXI_ID_WIDTH      ));
+    constant  AXI_REQ_AUSER         :  std_logic_vector(AXI_USER_WIDTH-1 downto 0)
+                                    := std_logic_vector(to_unsigned(AXI_AUSER , AXI_USER_WIDTH    ));
     constant  AXI_REQ_LOCK          :  AXI4_ALOCK_TYPE  := (others => '0');
     constant  AXI_REQ_SPECULATIVE   :  std_logic := '1';
     constant  AXI_REQ_SAFETY        :  std_logic := '0';
@@ -8087,6 +8115,10 @@ begin
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
+    AXI_ARUSER <= AXI_REQ_AUSER;
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
     RAM: SDPRAM 
         generic map(
             DEPTH       => BUF_DEPTH+3         ,
@@ -8111,7 +8143,7 @@ end RTL;
 --!     @file    qconv_strip_out_data_axi_writer.vhd
 --!     @brief   Quantized Convolution (strip) Out Data AXI Writer Module
 --!     @version 0.1.0
---!     @date    2019/5/3
+--!     @date    2019/5/5
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -8177,6 +8209,8 @@ entity  QCONV_STRIP_OUT_DATA_AXI_WRITER is
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AWUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         I_DATA_WIDTH    : --! @brief STREAM DATA WIDTH :
@@ -8374,8 +8408,10 @@ architecture RTL of QCONV_STRIP_OUT_DATA_AXI_WRITER is
                                     := std_logic_vector(to_unsigned(AXI_REGION, AXI4_AREGION_WIDTH));
     constant  AXI_REQ_CACHE         :  AXI4_ACACHE_TYPE
                                     := std_logic_vector(to_unsigned(AXI_CACHE , AXI4_ACACHE_WIDTH ));
-    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH -1 downto 0)
+    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH  -1 downto 0)
                                     := std_logic_vector(to_unsigned(AXI_ID    , AXI_ID_WIDTH      ));
+    constant  AXI_REQ_AUSER         :  std_logic_vector(AXI_USER_WIDTH-1 downto 0)
+                                    := std_logic_vector(to_unsigned(AXI_AUSER , AXI_USER_WIDTH    ));
     constant  AXI_REQ_LOCK          :  AXI4_ALOCK_TYPE  := (others => '0');
     constant  AXI_REQ_SPECULATIVE   :  std_logic := '1';
     constant  AXI_REQ_SAFETY        :  std_logic := '0';
@@ -8879,6 +8915,10 @@ begin
             BUF_DATA            => buf_rdata           , -- Out :
             BUF_PTR             => buf_rptr              -- Out :
         );                                               -- 
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
+    AXI_AWUSER <= AXI_REQ_AUSER;
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
@@ -9742,7 +9782,7 @@ end RTL;
 --!     @file    qconv_strip_th_data_axi_reader.vhd
 --!     @brief   Quantized Convolution (strip) Thresholds Data AXI Reader Module
 --!     @version 0.1.0
---!     @date    2019/4/26
+--!     @date    2019/5/5
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -9808,6 +9848,8 @@ entity  QCONV_STRIP_TH_DATA_AXI_READER is
                           integer := 0;
         AXI_CACHE       : --! @brief AXI REGION :
                           integer := 15;
+        AXI_AUSER       : --! @brief AXI AUSER :
+                          integer := 1;
         AXI_REQ_QUEUE   : --! @brief AXI REQUEST QUEUE SIZE :
                           integer := 4;
         REQ_ADDR_WIDTH  : --! @brief REQUEST ADDRESS WIDTH :
@@ -9978,8 +10020,10 @@ architecture RTL of QCONV_STRIP_TH_DATA_AXI_READER is
                                     := std_logic_vector(to_unsigned(AXI_REGION, AXI4_AREGION_WIDTH));
     constant  AXI_REQ_CACHE         :  AXI4_ACACHE_TYPE
                                     := std_logic_vector(to_unsigned(AXI_CACHE , AXI4_ACACHE_WIDTH ));
-    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH -1 downto 0)
+    constant  AXI_REQ_ID            :  std_logic_vector(AXI_ID_WIDTH  -1 downto 0)
                                     := std_logic_vector(to_unsigned(AXI_ID    , AXI_ID_WIDTH      ));
+    constant  AXI_REQ_AUSER         :  std_logic_vector(AXI_USER_WIDTH-1 downto 0)
+                                    := std_logic_vector(to_unsigned(AXI_AUSER , AXI_USER_WIDTH    ));
     constant  AXI_REQ_LOCK          :  AXI4_ALOCK_TYPE  := (others => '0');
     constant  AXI_REQ_SPECULATIVE   :  std_logic := '1';
     constant  AXI_REQ_SAFETY        :  std_logic := '0';
@@ -10407,6 +10451,10 @@ begin
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
+    AXI_ARUSER <= AXI_REQ_AUSER;
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
     RAM: SDPRAM 
         generic map(
             DEPTH       => BUF_DEPTH+3         ,
@@ -10431,7 +10479,7 @@ end RTL;
 --!     @file    qconv_strip_axi_core.vhd
 --!     @brief   Quantized Convolution (strip) AXI I/F Core Module
 --!     @version 0.1.0
---!     @date    2019/5/1
+--!     @date    2019/5/5
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -10529,6 +10577,8 @@ entity  QCONV_STRIP_AXI_CORE is
                               integer := 0;
         I_AXI_CACHE         : --! @brief IN  DATA AXI REGION :
                               integer := 15;
+        I_AXI_AUSER         : --! @brief IN  DATA AXI ARUSER :
+                              integer := 0;
         I_AXI_REQ_QUEUE     : --! @brief IN  DATA AXI REQUEST QUEUE SIZE :
                               integer := 4;
         O_AXI_ADDR_WIDTH    : --! @brief OUT DATA AXI ADDRESS WIDTH :
@@ -10551,6 +10601,8 @@ entity  QCONV_STRIP_AXI_CORE is
                               integer := 0;
         O_AXI_CACHE         : --! @brief OUT DATA AXI REGION :
                               integer := 15;
+        O_AXI_AUSER         : --! @brief OUT DATA AXI AWUSER :
+                              integer := 0;
         O_AXI_REQ_QUEUE     : --! @brief OUT DATA AXI REQUEST QUEUE SIZE :
                               integer := 4;
         K_AXI_ADDR_WIDTH    : --! @brief K   DATA AXI ADDRESS WIDTH :
@@ -10573,6 +10625,8 @@ entity  QCONV_STRIP_AXI_CORE is
                               integer := 0;
         K_AXI_CACHE         : --! @brief K   DATA AXI REGION :
                               integer := 15;
+        K_AXI_AUSER         : --! @brief K   DATA AXI ARUSER :
+                              integer := 0;
         K_AXI_REQ_QUEUE     : --! @brief K   DATA AXI REQUEST QUEUE SIZE :
                               integer := 4;
         T_AXI_ADDR_WIDTH    : --! @brief TH  DATA AXI ADDRESS WIDTH :
@@ -10595,6 +10649,8 @@ entity  QCONV_STRIP_AXI_CORE is
                               integer := 0;
         T_AXI_CACHE         : --! @brief TH  DATA AXI REGION :
                               integer := 15;
+        T_AXI_AUSER         : --! @brief TH  DATA AXI ARUSER :
+                              integer := 0;
         T_AXI_REQ_QUEUE     : --! @brief TH  DATA AXI REQUEST QUEUE SIZE :
                               integer := 1
     );
@@ -10775,7 +10831,7 @@ entity  QCONV_STRIP_AXI_CORE is
         T_AXI_ARPROT        : out std_logic_vector(2 downto 0);
         T_AXI_ARQOS         : out std_logic_vector(3 downto 0);
         T_AXI_ARREGION      : out std_logic_vector(3 downto 0);
-        T_AXI_ARUSER        : out std_logic_vector(K_AXI_USER_WIDTH  -1 downto 0);
+        T_AXI_ARUSER        : out std_logic_vector(T_AXI_USER_WIDTH  -1 downto 0);
         T_AXI_ARVALID       : out std_logic;
         T_AXI_ARREADY       : in  std_logic;
     -------------------------------------------------------------------------------
@@ -11083,6 +11139,7 @@ begin
             AXI_QOS         => I_AXI_QOS           , --
             AXI_REGION      => I_AXI_REGION        , -- 
             AXI_CACHE       => I_AXI_CACHE         , --
+            AXI_AUSER       => I_AXI_AUSER         , --
             AXI_REQ_QUEUE   => I_AXI_REQ_QUEUE     , --
             REQ_ADDR_WIDTH  => DATA_ADDR_WIDTH       -- 
         )                                            -- 
@@ -11157,6 +11214,7 @@ begin
             AXI_QOS         => O_AXI_QOS           , --
             AXI_REGION      => O_AXI_REGION        , --
             AXI_CACHE       => O_AXI_CACHE         , --
+            AXI_AUSER       => O_AXI_AUSER         , --
             AXI_REQ_QUEUE   => O_AXI_REQ_QUEUE     , --
             I_DATA_WIDTH    => O_DATA_WIDTH        , --
             REQ_ADDR_WIDTH  => DATA_ADDR_WIDTH       --
@@ -11243,6 +11301,7 @@ begin
             AXI_QOS         => K_AXI_QOS           , --
             AXI_REGION      => K_AXI_REGION        , --
             AXI_CACHE       => K_AXI_CACHE         , --
+            AXI_AUSER       => K_AXI_AUSER         , --
             AXI_REQ_QUEUE   => K_AXI_REQ_QUEUE     , --
             REQ_ADDR_WIDTH  => DATA_ADDR_WIDTH       --
         )                                            -- 
@@ -11335,6 +11394,7 @@ begin
             AXI_QOS         => T_AXI_QOS           , --
             AXI_REGION      => T_AXI_REGION        , --
             AXI_CACHE       => T_AXI_CACHE         , --
+            AXI_AUSER       => T_AXI_AUSER         , --
             AXI_REQ_QUEUE   => T_AXI_REQ_QUEUE     , --
             REQ_ADDR_WIDTH  => DATA_ADDR_WIDTH       --
         )                                            -- 
