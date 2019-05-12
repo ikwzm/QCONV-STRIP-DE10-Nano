@@ -46,7 +46,7 @@ fpga% sudo apt-get install g++
 ### Download QCONV-STRIP-DE10-Nano to DE10-Nano
 
 ```console
-fpga@debian-fpga:~/$ git clone https://github.com/ikwzm/QCONV-STRIP-DE10-Nano.git
+fpga@debian-fpga:~/$ git clone https://github.com/ikwzm/QCONV-STRIP-DE10-Nano.git -b v0.2
 fpga@debian-fpga:~/$ cd QCONV-STRIP-DE10-Nano
 ```
 
@@ -96,63 +96,55 @@ dtbocfg.rb --install qconv_strip --dts qconv_strip.dts
 ### Run Unit Test
 
 ```console
-fpga@debian-fpga:~/QCONV-STRIP-DE10-Nano$ rake unit_test_all
+fpga@debian-fpga:~/QCONV-STRIP-DE10-Nano$ rake unit_test2_all
 g++ -I ./include -Wpointer-arith -o unit_test src/tb/unit_test.cpp src/cpp/conv1x1.cpp src/cpp/conv3x3.cpp
-./unit_test -iw 1 -ih 1 -ic 32 -oc 32 -kw 1 -kh 1 -th 0 random
-FPGA exec time: 16 [usec]
-success(out_size: 64[byte])
+./unit_test -iw 160 -ih 160 -ic 64 -oc 32 -kw 1 -kh 1 -th 1 random
+FPGA exec time (160x160x64x32 1x1): 2242 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 1 -ih 1 -ic 32 -oc 32 -kw 1 -kh 1 -th 1 random
-FPGA exec time: 17 [usec]
-success(out_size: 64[byte])
+./unit_test -iw 160 -ih 160 -ic 32 -oc 8 -kw 3 -kh 3 -th 1 random
+FPGA exec time (160x160x32x8 3x3): 582 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 8 -ih 8 -ic 32 -oc 32 -kw 1 -kh 1 -th 0 random
-FPGA exec time: 25 [usec]
-success(out_size: 4096[byte])
+./unit_test -iw 80 -ih 80 -ic 32 -oc 16 -kw 3 -kh 3 -th 1 random
+FPGA exec time (80x80x32x16 3x3): 299 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 8 -ih 8 -ic 32 -oc 32 -kw 1 -kh 1 -th 1 random
-FPGA exec time: 26 [usec]
-success(out_size: 4096[byte])
+./unit_test -iw 40 -ih 40 -ic 64 -oc 32 -kw 3 -kh 3 -th 1 random
+FPGA exec time (40x40x64x32 3x3): 173 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 32 -ih 32 -ic 32 -oc 32 -kw 1 -kh 1 -th 0 random
-FPGA exec time: 168 [usec]
-success(out_size: 65536[byte])
+./unit_test -iw 20 -ih 20 -ic 128 -oc 64 -kw 3 -kh 3 -th 1 random
+FPGA exec time (20x20x128x64 3x3): 170 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 32 -ih 32 -ic 32 -oc 32 -kw 1 -kh 1 -th 1 random
-FPGA exec time: 167 [usec]
-success(out_size: 65536[byte])
+./unit_test -iw 10 -ih 10 -ic 256 -oc 128 -kw 3 -kh 3 -th 1 random
+FPGA exec time (10x10x256x128 3x3): 239 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 1 -ih 1 -ic 64 -oc 64 -kw 1 -kh 1 -th 0 random
-FPGA exec time: 17 [usec]
-success(out_size: 128[byte])
+./unit_test -iw 5 -ih 5 -ic 512 -oc 128 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x512x128 3x3): 267 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 1 -ih 1 -ic 64 -oc 64 -kw 1 -kh 1 -th 1 random
-FPGA exec time: 18 [usec]
-success(out_size: 128[byte])
+./unit_test -iw 5 -ih 5 -ic 128 -oc 256 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x128x256 3x3): 144 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 32 -ih 32 -ic 128 -oc 128 -kw 1 -kh 1 -th 0 random
-FPGA exec time: 614 [usec]
-success(out_size: 262144[byte])
+./unit_test -iw 10 -ih 10 -ic 128 -oc 32 -kw 1 -kh 1 -th 1 random
+FPGA exec time (10x10x128x32 1x1): 29 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 32 -ih 32 -ic 128 -oc 128 -kw 1 -kh 1 -th 1 random
-FPGA exec time: 616 [usec]
-success(out_size: 262144[byte])
+./unit_test -iw 20 -ih 20 -ic 64 -oc 16 -kw 1 -kh 1 -th 1 random
+FPGA exec time (20x20x64x16 1x1): 37 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 64 -ih 64 -ic 64 -oc 64 -kw 1 -kh 1 -th 0 random
-FPGA exec time: 1197 [usec]
-success(out_size: 524288[byte])
+./unit_test -iw 40 -ih 40 -ic 32 -oc 4 -kw 1 -kh 1 -th 1 random
+FPGA exec time (40x40x32x4 1x1): 42 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 64 -ih 64 -ic 64 -oc 64 -kw 1 -kh 1 -th 1 random
-FPGA exec time: 1199 [usec]
-success(out_size: 524288[byte])
+./unit_test -iw 5 -ih 5 -ic 1024 -oc 256 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x1024x256 3x3): 1022 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 1 -ih 1 -ic 32 -oc 32 -kw 3 -kh 3 -th 0 random
-FPGA exec time: 19 [usec]
-success(out_size: 64[byte])
+./unit_test -iw 5 -ih 5 -ic 256 -oc 128 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x256x128 3x3): 142 [usec]
 [qconv_strip] test success!!!
-./unit_test -iw 1 -ih 1 -ic 32 -oc 32 -kw 3 -kh 3 -th 1 random
-FPGA exec time: 20 [usec]
-success(out_size: 64[byte])
+./unit_test -iw 5 -ih 5 -ic 128 -oc 256 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x128x256 3x3): 143 [usec]
+[qconv_strip] test success!!!
+./unit_test -iw 5 -ih 5 -ic 256 -oc 128 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x256x128 3x3): 143 [usec]
+[qconv_strip] test success!!!
+./unit_test -iw 5 -ih 5 -ic 128 -oc 256 -kw 3 -kh 3 -th 1 random
+FPGA exec time (5x5x128x256 3x3): 144 [usec]
 [qconv_strip] test success!!!
 ```
 
