@@ -113,4 +113,44 @@ desc "unit_test_all"
 task :unit_test_all => test_task_list do
 end
 
+#                   type      iw  ih   ic  oc  kw  kh  use_th
+TEST2_SCENARIOS = [["random",160,160,  64, 32,  1,  1, 1],
+                   ["random",160,160,  32,  8,  3,  3, 1],
+                   ["random", 80, 80,  32, 16,  3,  3, 1],
+                   ["random", 40, 40,  64, 32,  3,  3, 1],
+                   ["random", 20, 20, 128, 64,  3,  3, 1],
+                   ["random", 10, 10, 256,128,  3,  3, 1],
+                   ["random",  5,  5, 512,128,  3,  3, 1],
+                   ["random",  5,  5, 128,256,  3,  3, 1],
+                   ["random", 10, 10, 128, 32,  1,  1, 1],
+                   ["random", 20, 20,  64, 16,  1,  1, 1],
+                   ["random", 40, 40,  32,  4,  1,  1, 1],
+                   ["random",  5,  5,1024,256,  3,  3, 1],
+                   ["random",  5,  5, 256,128,  3,  3, 1],
+                   ["random",  5,  5, 128,256,  3,  3, 1],
+                   ["random",  5,  5, 256,128,  3,  3, 1],
+                   ["random",  5,  5, 128,256,  3,  3, 1]]
+test2_task_list =  []
+
+TEST2_SCENARIOS.each_with_index do |scenario_param, index|
+  type = scenario_param[0]
+  iw   = scenario_param[1]
+  ih   = scenario_param[2]
+  ic   = scenario_param[3]
+  oc   = scenario_param[4]
+  kw   = scenario_param[5]
+  kh   = scenario_param[6]
+  uth  = scenario_param[7]
+  task_name = sprintf("test_2_%03d", index).to_sym
+  test2_task_list.push(task_name)
+  desc "unit_test type=#{type} iw=#{iw} ih=#{ih} ic=#{ic} oc=#{oc} kw=#{kw} kh=#{kh} use_th={uth}"
+  task task_name => ["unit_test"] do
+    sh "./unit_test -iw #{iw} -ih #{ih} -ic #{ic} -oc #{oc} -kw #{kw} -kh #{kh} -th #{uth} #{type}"
+  end
+end
+
+desc "unit_test2_all"
+task :unit_test2_all => test2_task_list do
+end
+
 task :default => ["unit_test"]
