@@ -158,7 +158,7 @@ FPGA exec time (5x5x128x256 3x3): 144 [usec]
 ### Download QCONV-STRIP-DE10-Nano
 
 ```console
-shell$ git clone https://github.com/ikwzm/QCONV-STRIP-DE10-Nano.git
+shell$ git clone https://github.com/ikwzm/QCONV-STRIP-DE10-Nano.git -b v0.2
 shell$ cd QCONV-STRIP-DE10-Nano
 shell$ git submodule update --init --recursive
 ```
