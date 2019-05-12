@@ -107,7 +107,7 @@ public:
 
 QconvStripEnv qconv_env("uio_qconv_strip", "udmabuf-qconv-in", "udmabuf-qconv-out", "udmabuf-qconv-k", "udmabuf-qconv-th", true);
 
-void qconv_strip(unsigned k_w, unsigned k_h,
+bool qconv_strip(unsigned k_w, unsigned k_h,
                  T_q in_data_packed[], T_out out_data[], T_q k_data_packed[], T_out th_data[],
                  unsigned in_w, unsigned in_h, unsigned in_c_by_word, 
                  unsigned out_w, unsigned out_h, unsigned out_c, unsigned pad, unsigned use_threshold)
@@ -171,13 +171,17 @@ void qconv_strip(unsigned k_w, unsigned k_h,
   }
 
   auto diff = end - start;
-  std::cout << "FPGA exec time: " << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << " [usec]"
-       << std::endl;
+  std::cout << "FPGA exec time ("
+            << in_w << "x"
+            << in_h << "x"
+            << in_c_by_word*32 << "x"
+            << out_c << " "
+            << k_w << "x"
+            << k_h << "): "
+            << std::chrono::duration_cast<std::chrono::microseconds>(diff).count() << " [usec]"
+            << std::endl;
 
-  if (status == false)
-    std::cout << "error(out_size:   " << out_size*sizeof(T_out) << "[byte])" << std::endl;
-  else
-    std::cout << "success(out_size: " << out_size*sizeof(T_out) << "[byte])" << std::endl;
+  return status;
 }
 
 bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, unsigned in_w, unsigned in_h, unsigned out_c, unsigned use_threshold, bool verbose, bool generate_scenario)
@@ -309,12 +313,19 @@ bool test_conv(input_type &in_type, unsigned k_w, unsigned k_h, unsigned in_c, u
     std::cout << "qconv strip start..." << std::endl;
   }
 
-  qconv_strip(k_w, k_h, in_data_quantized, out_data_fpga, k_data_quantized, threshold_data,
-              in_w, in_h, in_c_by_word, out_w, out_h, out_c, pad_w, use_threshold);
+  status = qconv_strip(k_w, k_h, in_data_quantized, out_data_fpga, k_data_quantized, threshold_data,
+                       in_w, in_h, in_c_by_word, out_w, out_h, out_c, pad_w, use_threshold);
+
+  if (status == false) {
+    std::cout << "qconv strip error(out_size:   " << out_size*sizeof(T_out) << "[byte])" << std::endl;
+    return status;
+  }
 
   if (verbose == true) {
+    std::cout << "qconv strip success(out_size: " << out_size*sizeof(T_out) << "[byte])" << std::endl;
     std::cout << "qconv strip done" << std::endl;
   }
+
   comp_fpga = compare_output(out_data_fpga, out_data, "qconv_strip", out_h, out_w, out_c);
 
   if (generate_scenario == true) {
