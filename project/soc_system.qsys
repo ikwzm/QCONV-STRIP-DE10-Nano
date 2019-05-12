@@ -484,7 +484,7 @@
   <parameter name="F2SDRAM_Type" value="" />
   <parameter name="F2SDRAM_Width" value="" />
   <parameter name="F2SINTERRUPT_Enable" value="true" />
-  <parameter name="F2S_Width" value="2" />
+  <parameter name="F2S_Width" value="3" />
   <parameter name="FIX_READ_LATENCY" value="8" />
   <parameter name="FORCED_NON_LDC_ADDR_CMD_MEM_CK_INVERT" value="false" />
   <parameter name="FORCED_NUM_WRITE_FR_CYCLE_SHIFTS" value="0" />
@@ -904,12 +904,12 @@
  <module
    name="qconv_strip_axi_0"
    kind="qconv_strip_axi3"
-   version="1.0"
+   version="2.0"
    enabled="1">
   <parameter name="AXI_VERSION" value="AXI3" />
   <parameter name="IN_C_UNROLL" value="1" />
   <parameter name="IO_AXI_ADDR_WIDTH" value="32" />
-  <parameter name="IO_AXI_DATA_WIDTH" value="64" />
+  <parameter name="IO_AXI_DATA_WIDTH" value="128" />
   <parameter name="IO_AXI_ID_WIDTH" value="2" />
   <parameter name="IO_AXI_USER_WIDTH" value="2" />
   <parameter name="IO_USE_ADDR_USER" value="1" />
@@ -920,7 +920,7 @@
   <parameter name="K_AXI_ADDR_WIDTH" value="32" />
   <parameter name="K_AXI_AUSER" value="1" />
   <parameter name="K_AXI_CACHE" value="15" />
-  <parameter name="K_AXI_DATA_WIDTH" value="64" />
+  <parameter name="K_AXI_DATA_WIDTH" value="128" />
   <parameter name="K_AXI_ID" value="1" />
   <parameter name="K_AXI_ID_WIDTH" value="2" />
   <parameter name="K_AXI_PROT" value="0" />
@@ -935,7 +935,7 @@
   <parameter name="T_AXI_ADDR_WIDTH" value="32" />
   <parameter name="T_AXI_AUSER" value="1" />
   <parameter name="T_AXI_CACHE" value="15" />
-  <parameter name="T_AXI_DATA_WIDTH" value="64" />
+  <parameter name="T_AXI_DATA_WIDTH" value="128" />
   <parameter name="T_AXI_ID" value="2" />
   <parameter name="T_AXI_ID_WIDTH" value="2" />
   <parameter name="T_AXI_PROT" value="0" />

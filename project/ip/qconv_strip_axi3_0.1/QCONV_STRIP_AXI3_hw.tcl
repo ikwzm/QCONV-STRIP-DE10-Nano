@@ -5,7 +5,7 @@ package require -exact qsys 12.1
 # | 
 set_module_property DESCRIPTION          "Quantized Convolution (strip) with AXI3 I/F"
 set_module_property NAME                 qconv_strip_axi3
-set_module_property VERSION              1.0
+set_module_property VERSION              2.0
 set_module_property INTERNAL             false
 set_module_property OPAQUE_ADDRESS_MAP   true
 set_module_property AUTHOR               "ikwm"

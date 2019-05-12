@@ -189,12 +189,12 @@ end package;
 --!     @file    components.vhd                                                  --
 --!     @brief   PIPEWORK COMPONENT LIBRARY DESCRIPTION                          --
 --!     @version 1.7.1                                                           --
---!     @date    2018/12/23                                                      --
+--!     @date    2019/05/09                                                      --
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>                     --
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
 --                                                                               --
---      Copyright (C) 2018 Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>           --
+--      Copyright (C) 2019 Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>           --
 --      All rights reserved.                                                     --
 --                                                                               --
 --      Redistribution and use in source and binary forms, with or without       --
@@ -1661,7 +1661,13 @@ component POOL_INTAKE_PORT
                           --! * QUEUE_SIZE=0を指定した場合は、キューの深さは自動的に
                           --!   (PORT_DATA_BITS/WORD_BITS)+(POOL_DATA_BITS/WORD_BITS)
                           --!   に設定される.
-                          integer := 0
+                          integer := 0;
+        PORT_JUSTIFIED  : --! @brief PORT INPUT JUSTIFIED :
+                          --! 入力 PORT 側の有効なデータが常にLOW側に詰められている
+                          --! ことを示すフラグ.
+                          --! * 常にLOW側に詰められている場合は、シフタが必要なくな
+                          --!   るため回路が簡単になる.
+                          integer range 0 to 1 := 0
     );
     port (
     -------------------------------------------------------------------------------
@@ -1828,7 +1834,13 @@ component POOL_OUTLET_PORT
                           --! * QUEUE_SIZE=0を指定した場合は、キューの深さは自動的に
                           --!   (PORT_DATA_BITS/WORD_BITS)+(POOL_DATA_BITS/WORD_BITS)
                           --!   に設定される.
-                          integer := 0
+                          integer := 0;
+        POOL_JUSTIFIED  : --! @brief POOL BUFFER INPUT INPUT JUSTIFIED :
+                          --! 入力 POOL 側の有効なデータが常にLOW側に詰められている
+                          --! ことを示すフラグ.
+                          --! * 常にLOW側に詰められている場合は、シフタが必要なくな
+                          --!   るため回路が簡単になる.
+                          integer range 0 to 1 := 0
     );
     port (
     -------------------------------------------------------------------------------
@@ -3067,6 +3079,12 @@ component UNROLLED_LOOP_COUNTER
                           --! ループ回数の最大値を指定する.
                           integer := 8;
         MAX_LOOP_INIT   : --! @brief MAX LOOP INIT SIZE :
+                          --! Unroll 時の LOOP_VALID(ループ有効信号)のオフセット値
+                          --! を指定する.
+                          --! * ここで指定する値は UNROLL で指定した値未満でなけれ
+                          --!   ばならない.
+                          --! * ここでのオフセット値は、あくまでも Unroll 時の最初
+                          --!   の端数分を指定していることに注意.
                           integer := 0
     );
     port (
@@ -3106,7 +3124,7 @@ component UNROLLED_LOOP_COUNTER
                           --! * ループが終了"する"ことを示す信号.
                           out std_logic;
         LOOP_BUSY       : --! @brief OUTPUT LOOP BUSY :
-                          --! ループ有効信号出力.
+                          --! ループ実行信号出力.
                           --! * ループ中であることを示す信号.
                           out std_logic;
         LOOP_VALID      : --! @brief OUTPUT LOOP VALID VECTOR:
@@ -3124,7 +3142,7 @@ component UNROLLED_LOOP_COUNTER
                           --! ループが終了したことを示す出力信号.
                           out std_logic;
         NEXT_BUSY       : --! @brief OUTPUT LOOP BUSY(NEXT_CYCLE) :
-                          --! ループ有効信号出力.
+                          --! ループ実行信号出力.
                           --! * ループ中であることを示す信号.
                           out std_logic;
         NEXT_VALID      : --! @brief OUTPUT LOOP VALID VECTOR(NEXT CYCLE) :
@@ -9488,12 +9506,12 @@ end RTL;
 -----------------------------------------------------------------------------------
 --!     @file    pool_outlet_port.vhd
 --!     @brief   POOL OUTLET PORT
---!     @version 1.5.8
---!     @date    2015/9/20
+--!     @version 1.8.0
+--!     @date    2010/5/9
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
---      Copyright (C) 2012-2015 Ichiro Kawazome
+--      Copyright (C) 2012-2019 Ichiro Kawazome
 --      All rights reserved.
 --
 --      Redistribution and use in source and binary forms, with or without
@@ -9568,7 +9586,13 @@ entity  POOL_OUTLET_PORT is
                           --! * QUEUE_SIZE=0を指定した場合は、キューの深さは自動的に
                           --!   (PORT_DATA_BITS/WORD_BITS)+(POOL_DATA_BITS/WORD_BITS)
                           --!   に設定される.
-                          integer := 0
+                          integer := 0;
+        POOL_JUSTIFIED  : --! @brief POOL BUFFER INPUT INPUT JUSTIFIED :
+                          --! 入力 POOL 側の有効なデータが常にLOW側に詰められている
+                          --! ことを示すフラグ.
+                          --! * 常にLOW側に詰められている場合は、シフタが必要なくな
+                          --!   るため回路が簡単になる.
+                          integer range 0 to 1 := 0
     );
     port (
     -------------------------------------------------------------------------------
@@ -9979,7 +10003,7 @@ begin
                 O_VAL_SIZE      => O_WORDS        , -- 
                 O_SHIFT_MIN     => o_shift'low    , --
                 O_SHIFT_MAX     => o_shift'high   , --
-                I_JUSTIFIED     => 0              , -- 
+                I_JUSTIFIED     => POOL_JUSTIFIED , -- 
                 FLUSH_ENABLE    => 0                -- 
             )                                       -- 
             port map (                              -- 
@@ -17218,7 +17242,7 @@ end package body;
 --!     @file    image_components.vhd                                            --
 --!     @brief   PIPEWORK IMAGE COMPONENTS LIBRARY DESCRIPTION                   --
 --!     @version 1.8.0                                                           --
---!     @date    2019/04/28                                                      --
+--!     @date    2019/05/09                                                      --
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>                     --
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
@@ -19059,7 +19083,7 @@ end RTL;
 --!     @file    pump_components.vhd                                             --
 --!     @brief   PIPEWORK PUMP COMPONENTS LIBRARY DESCRIPTION                    --
 --!     @version 1.8.0                                                           --
---!     @date    2019/03/25                                                      --
+--!     @date    2019/05/09                                                      --
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>                     --
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
@@ -20417,6 +20441,13 @@ component PUMP_STREAM_INTAKE_CONTROLLER
         O_DATA_BITS         : --! @brief OUTPUT STREAM DATA BITS :
                               --! O_DATA のビット数を指定する.
                               integer := 32;
+        O_WORD_BITS         : --! @brief INPUT STREAM WORD BITS :
+                              --! O_DATA の１ワードあたりのビット数を指定する.
+                              --! * O_DATA_BITS   >=  O_WORD_BITS でなければならない.
+                              --! * O_DATA_BITS   mod O_WORD_BITS = 0 でなければならない.
+                              --! * BUF_DATA_BITS >=  O_WORD_BITS でなければならない.
+                              --! * BUF_DATA_BITS mod O_WORD_BITS = 0 でなければならない.
+                              integer := 8;
         BUF_DEPTH           : --! @brief BUFFER DEPTH :
                               --! バッファの容量(バイト数)を２のべき乗値で指定する.
                               integer := 12;
@@ -20679,6 +20710,15 @@ component PUMP_STREAM_OUTLET_CONTROLLER
         I_DATA_BITS         : --! @brief INPUT STREAM DATA BITS :
                               --! I_DATA のビット数を指定する.
                               integer := 32;
+        I_WORD_BITS         : --! @brief INPUT STREAM WORD BITS :
+                              --! 入力側の１ワードあたりのビット数を指定する.
+                              integer := 8;
+        I_JUSTIFIED         : --! @brief INPUT STREAM DATA JUSTIFIED :
+                              --! 入力側の有効なデータが常にLOW側に詰められていることを
+                              --! 示すフラグ.
+                              --! * 常にLOW側に詰められている場合は、シフタが必要なくなる
+                              --!   ため回路が簡単になる.
+                              integer range 0 to 1 := 0;
         BUF_DEPTH           : --! @brief BUFFER DEPTH :
                               --! バッファの容量(バイト数)を２のべき乗値で指定する.
                               integer := 12;
@@ -25635,12 +25675,12 @@ end RTL;
 -----------------------------------------------------------------------------------
 --!     @file    pool_intake_port.vhd
 --!     @brief   POOL INTAKE PORT
---!     @version 1.5.8
---!     @date    2015/9/20
+--!     @version 1.8.0
+--!     @date    2019/5/9
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
---      Copyright (C) 2012-2015 Ichiro Kawazome
+--      Copyright (C) 2012-2019 Ichiro Kawazome
 --      All rights reserved.
 --
 --      Redistribution and use in source and binary forms, with or without
@@ -25704,7 +25744,13 @@ entity  POOL_INTAKE_PORT is
                           --! * QUEUE_SIZE=0を指定した場合は、キューの深さは自動的に
                           --!   (PORT_DATA_BITS/WORD_BITS)+(POOL_DATA_BITS/WORD_BITS)
                           --!   に設定される.
-                          integer := 0
+                          integer := 0;
+        PORT_JUSTIFIED  : --! @brief PORT INPUT JUSTIFIED :
+                          --! 入力 PORT 側の有効なデータが常にLOW側に詰められている
+                          --! ことを示すフラグ.
+                          --! * 常にLOW側に詰められている場合は、シフタが必要なくな
+                          --!   るため回路が簡単になる.
+                          integer range 0 to 1 := 0
     );
     port (
     -------------------------------------------------------------------------------
@@ -25934,7 +25980,7 @@ begin
             O_VAL_SIZE      => O_WORDS        , -- 
             O_SHIFT_MIN     => o_shift'low    , --
             O_SHIFT_MAX     => o_shift'high   , --
-            I_JUSTIFIED     => 0              , -- 
+            I_JUSTIFIED     => PORT_JUSTIFIED , -- 
             FLUSH_ENABLE    => 0                -- 
         )                                       -- 
         port map (                              -- 
@@ -38412,6 +38458,10 @@ architecture RTL of IMAGE_SLICE_MASTER_CONTROLLER is
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
+    constant  MAX_ELEM_BYTES        :  integer := SOURCE_SHAPE.ELEM_BITS/8;
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
     signal    y_loop_start          :  std_logic;
     signal    y_loop_next           :  std_logic;
     signal    y_loop_done           :  std_logic;
@@ -38435,15 +38485,19 @@ architecture RTL of IMAGE_SLICE_MASTER_CONTROLLER is
     -------------------------------------------------------------------------------
     signal    base_addr             :  std_logic_vector(ADDR_BITS-1 downto 0);
     signal    tran_addr             :  std_logic_vector(ADDR_BITS-1 downto 0);
-    signal    tran_bytes            :  integer range 0 to SLICE_SHAPE .X.MAX_SIZE * SLICE_SHAPE .C.MAX_SIZE * SOURCE_SHAPE.ELEM_BITS/8;
-    signal    channel_bytes         :  integer range 0 to SOURCE_SHAPE.C.MAX_SIZE * SOURCE_SHAPE.ELEM_BITS/8;
-    signal    width_bytes           :  integer range 0 to SOURCE_SHAPE.X.MAX_SIZE * SOURCE_SHAPE.C.MAX_SIZE * SOURCE_SHAPE.ELEM_BITS/8;
-    signal    start_bytes           :  integer range 0 to ((MAX_SLICE_Y_POS * SOURCE_SHAPE.X.MAX_SIZE * SOURCE_SHAPE.C.MAX_SIZE) + 
+    signal    tran_bytes            :  integer range 0 to MAX_ELEM_BYTES * SLICE_SHAPE .C.MAX_SIZE * SLICE_SHAPE.X.MAX_SIZE;
+    signal    c_slice_bytes         :  integer range 0 to MAX_ELEM_BYTES * SLICE_SHAPE .C.MAX_SIZE;
+    signal    channel_bytes         :  integer range 0 to MAX_ELEM_BYTES * SOURCE_SHAPE.C.MAX_SIZE;
+    signal    width_size            :  integer range 0 to SOURCE_SHAPE.X.MAX_SIZE;
+    signal    width_bytes           :  integer range 0 to SOURCE_SHAPE.X.MAX_SIZE * SOURCE_SHAPE.C.MAX_SIZE * MAX_ELEM_BYTES;
+    signal    c_start_addr          :  integer range 0 to ((MAX_SLICE_C_POS                                                    ))* MAX_ELEM_BYTES;
+    signal    x_start_addr          :  integer range 0 to ((MAX_SLICE_C_POS                                                    ) +
+                                                           (MAX_SLICE_X_POS *                           SOURCE_SHAPE.C.MAX_SIZE))* MAX_ELEM_BYTES;
+    signal    start_addr            :  integer range 0 to ((MAX_SLICE_Y_POS * SOURCE_SHAPE.X.MAX_SIZE * SOURCE_SHAPE.C.MAX_SIZE) + 
                                                            (MAX_SLICE_X_POS *                           SOURCE_SHAPE.C.MAX_SIZE) +
-                                                           (MAX_SLICE_C_POS                                                    ))
-                                                          * SOURCE_SHAPE.ELEM_BITS/8;
-    signal    start_x_pos           :  integer range 0 to MAX_SLICE_X_POS;
-    signal    start_y_pos           :  integer range 0 to MAX_SLICE_Y_POS;
+                                                           (MAX_SLICE_C_POS                                                    ))* MAX_ELEM_BYTES;
+    signal    x_start_pos           :  integer range 0 to MAX_SLICE_X_POS;
+    signal    y_start_pos           :  integer range 0 to MAX_SLICE_Y_POS;
     signal    x_continuous          :  boolean;
     -------------------------------------------------------------------------------
     -- 
@@ -38465,22 +38519,30 @@ begin
         if (RST = '1') then
                 state          <= IDLE_STATE;
                 channel_bytes  <= 0;
+                width_size     <= 0;
                 width_bytes    <= 0;
-                start_bytes    <= 0;
-                start_x_pos    <= 0;
-                start_y_pos    <= 0;
+                c_start_addr   <= 0;
+                x_start_addr   <= 0;
+                start_addr     <= 0;
+                x_start_pos    <= 0;
+                y_start_pos    <= 0;
                 x_loop_size    <= 1;
+                c_slice_bytes  <= 0;
                 tran_bytes     <= 0;
                 x_continuous   <= FALSE;
         elsif (CLK'event and CLK = '1') then
             if (CLR = '1') then
                 state          <= IDLE_STATE;
                 channel_bytes  <= 0;
+                width_size     <= 0;
                 width_bytes    <= 0;
-                start_bytes    <= 0;
-                start_x_pos    <= 0;
-                start_y_pos    <= 0;
+                c_start_addr   <= 0;
+                x_start_addr   <= 0;
+                start_addr     <= 0;
+                x_start_pos    <= 0;
+                y_start_pos    <= 0;
                 x_loop_size    <= 1;
+                c_slice_bytes  <= 0;
                 tran_bytes     <= 0;
                 x_continuous   <= FALSE;
             else
@@ -38492,11 +38554,11 @@ begin
                             state <= IDLE_STATE;
                         end if;
                         channel_bytes <= SOURCE_C_SIZE * ELEM_BYTES;
-                        tran_bytes    <= SLICE_C_SIZE  * ELEM_BYTES;
-                        start_bytes   <= SLICE_C_POS   * ELEM_BYTES;
-                        width_bytes   <= SOURCE_X_SIZE;
-                        start_x_pos   <= SLICE_X_POS;
-                        start_y_pos   <= SLICE_Y_POS;
+                        c_slice_bytes <= SLICE_C_SIZE  * ELEM_BYTES;
+                        c_start_addr  <= SLICE_C_POS   * ELEM_BYTES;
+                        width_size    <= SOURCE_X_SIZE;
+                        x_start_pos   <= SLICE_X_POS;
+                        y_start_pos   <= SLICE_Y_POS;
                         x_loop_size   <= SLICE_X_SIZE;
                         x_continuous  <= (SLICE_C_POS = 0 and SLICE_C_SIZE = SOURCE_C_SIZE);
                     when PREP0_STATE =>
@@ -38507,19 +38569,22 @@ begin
                         end if;
                         if (x_continuous = TRUE) then
                             x_loop_size <= 1;
-                            tran_bytes  <= x_loop_size * tran_bytes;
+                            tran_bytes  <= x_loop_size * c_slice_bytes;
+                        else
+                            x_loop_size <= x_loop_size;
+                            tran_bytes  <= c_slice_bytes;
                         end if;
-                     -- start_bytes <= SLICE_C_POS*ELEM_BYTES + SLICE_X_POS*SOURCE_C_SIZE*ELEM_BYTES;
-                        start_bytes <= start_bytes + start_x_pos * channel_bytes;
-                     -- width_bytes <= SOURCE_X_SIZE * SOURCE_C_SIZE * ELEM_BYTES;
-                        width_bytes <= width_bytes * channel_bytes;              
+                     -- x_start_addr <= SLICE_C_POS*ELEM_BYTES + SLICE_X_POS*(SOURCE_C_SIZE*ELEM_BYTES);
+                        x_start_addr <= c_start_addr + x_start_pos * channel_bytes;
+                     -- width_bytes  <= SOURCE_X_SIZE * (SOURCE_C_SIZE * ELEM_BYTES);
+                        width_bytes  <= width_size    * channel_bytes;              
                     when PREP1_STATE =>
-                        state       <= START_STATE;
-                     -- start_bytes <= SLICE_C_POS*ELEM_BYTES + SLICE_X_POS*SOURCE_C_SIZE*ELEM_BYTES
+                        state        <= START_STATE;
+                     -- start_addr   <= SLICE_C_POS*ELEM_BYTES + SLICE_X_POS*SOURCE_C_SIZE*ELEM_BYTES
                      --              + SLICE_Y_POS * SOURCE_X_SIZE * SOURCE_C_SIZE * ELEM_BYTES;
-                        start_bytes <= start_bytes + start_y_pos * width_bytes;
+                        start_addr   <= x_start_addr + y_start_pos * width_bytes;
                     when START_STATE =>
-                        state       <= RUN_STATE;
+                        state <= RUN_STATE;
                     when RUN_STATE =>
                         if    (y_loop_done = '1' and MST_ERROR = '1') then
                             state <= RES_ERROR_STATE;
@@ -38573,7 +38638,7 @@ begin
             elsif (state = IDLE_STATE and REQ_VALID   = '1') then
                 base_addr <= REQ_ADDR;
             elsif (state = START_STATE) then
-                base_addr <= std_logic_vector(unsigned(base_addr) + start_bytes);
+                base_addr <= std_logic_vector(unsigned(base_addr) + start_addr );
             elsif (state = RUN_STATE  and y_loop_next = '1') then
                 base_addr <= std_logic_vector(unsigned(base_addr) + width_bytes);
             end if;
@@ -41235,7 +41300,7 @@ end RTL;
 --!     @file    pump_stream_intake_controller.vhd
 --!     @brief   PUMP STREAM INTAKE CONTROLLER
 --!     @version 1.8.0
---!     @date    2019/3/25
+--!     @date    2019/5/9
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -41338,6 +41403,13 @@ entity  PUMP_STREAM_INTAKE_CONTROLLER is
         O_DATA_BITS         : --! @brief OUTPUT STREAM DATA BITS :
                               --! O_DATA のビット数を指定する.
                               integer := 32;
+        O_WORD_BITS         : --! @brief INPUT STREAM WORD BITS :
+                              --! O_DATA の１ワードあたりのビット数を指定する.
+                              --! * O_DATA_BITS   >=  O_WORD_BITS でなければならない.
+                              --! * O_DATA_BITS   mod O_WORD_BITS = 0 でなければならない.
+                              --! * BUF_DATA_BITS >=  O_WORD_BITS でなければならない.
+                              --! * BUF_DATA_BITS mod O_WORD_BITS = 0 でなければならない.
+                              integer := 8;
         BUF_DEPTH           : --! @brief BUFFER DEPTH :
                               --! バッファの容量(バイト数)を２のべき乗値で指定する.
                               integer := 12;
@@ -42137,7 +42209,7 @@ begin
         O_PORT: POOL_OUTLET_PORT                         -- 
             generic map (                                -- 
                 UNIT_BITS       => 8                   , -- 
-                WORD_BITS       => 8                   , --   
+                WORD_BITS       => O_WORD_BITS         , --   
                 PORT_DATA_BITS  => O_DATA_BITS         , --   
                 POOL_DATA_BITS  => BUF_DATA_BITS       , --   
                 PORT_PTR_BITS   => BUF_DEPTH           , --   
@@ -42145,7 +42217,8 @@ begin
                 SEL_BITS        => 1                   , --   
                 SIZE_BITS       => SIZE_BITS           , --   
                 POOL_SIZE_VALID => 0                   , --   
-                QUEUE_SIZE      => 0                     --   
+                QUEUE_SIZE      => 0                   , --
+                POOL_JUSTIFIED  => 1                     -- 
             )                                            -- 
             port map (                                   -- 
             -----------------------------------------------------------------------
@@ -42249,7 +42322,7 @@ end RTL;
 --!     @file    pump_stream_outlet_controller.vhd
 --!     @brief   PUMP STREAM OUTLET CONTROLLER
 --!     @version 1.8.0
---!     @date    2019/3/25
+--!     @date    2019/5/9
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -42352,6 +42425,15 @@ entity  PUMP_STREAM_OUTLET_CONTROLLER is
         I_DATA_BITS         : --! @brief INPUT STREAM DATA BITS :
                               --! I_DATA のビット数を指定する.
                               integer := 32;
+        I_WORD_BITS         : --! @brief INPUT STREAM WORD BITS :
+                              --! 入力側の１ワードあたりのビット数を指定する.
+                              integer := 8;
+        I_JUSTIFIED         : --! @brief INPUT STREAM DATA JUSTIFIED :
+                              --! 入力側の有効なデータが常にLOW側に詰められていることを
+                              --! 示すフラグ.
+                              --! * 常にLOW側に詰められている場合は、シフタが必要なくなる
+                              --!   ため回路が簡単になる.
+                              integer range 0 to 1 := 0;
         BUF_DEPTH           : --! @brief BUFFER DEPTH :
                               --! バッファの容量(バイト数)を２のべき乗値で指定する.
                               integer := 12;
@@ -43171,13 +43253,14 @@ begin
         I_PORT: POOL_INTAKE_PORT                         -- 
             generic map (                                -- 
                 UNIT_BITS       => 8                   , -- 
-                WORD_BITS       => 8                   , --   
+                WORD_BITS       => I_WORD_BITS         , --   
                 PORT_DATA_BITS  => I_DATA_BITS         , --   
                 POOL_DATA_BITS  => BUF_DATA_BITS       , --   
                 SEL_BITS        => 1                   , --   
                 SIZE_BITS       => SIZE_BITS           , --   
                 PTR_BITS        => BUF_DEPTH           , --   
-                QUEUE_SIZE      => 0                     --
+                QUEUE_SIZE      => 0                   , --
+                PORT_JUSTIFIED  => I_JUSTIFIED           -- 
             )                                            -- 
             port map (                                   --
             -----------------------------------------------------------------------

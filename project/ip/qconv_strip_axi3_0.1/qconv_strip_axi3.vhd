@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
 --!     @file    qconv_strip_axi3.vhd
 --!     @brief   Quantized Convolution (strip) AXI3 I/F Module
---!     @version 0.1.0
---!     @date    2019/5/5
+--!     @version 0.2.0
+--!     @date    2019/5/12
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
