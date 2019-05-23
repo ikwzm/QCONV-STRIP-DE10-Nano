@@ -1,4 +1,7 @@
-all: pipework_altera.vhd pipework_altera.qip qconv_altera.vhd qconv_altera.qip
+all: pipework_altera.vhd pipework_altera.qip qconv_altera.vhd qconv_altera.qip qconv_strip_axi3_0.1/qconv_strip_axi3.vhd
+
+qconv_strip_axi3_0.1/qconv_strip_axi3.vhd : ../../qconv-strip-vhdl/src/main/vhdl/qconv_strip_axi3.vhd
+	cp ../../qconv-strip-vhdl/src/main/vhdl/qconv_strip_axi3.vhd qconv_strip_axi3_0.1/qconv_strip_axi3.vhd
 
 pipework_altera.vhd :
 	../../qconv-strip-vhdl/PipeWork/tools/vhdl-archiver.rb -v       \
