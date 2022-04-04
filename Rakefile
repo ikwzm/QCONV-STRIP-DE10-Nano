@@ -1,12 +1,28 @@
+TARGET                 = "qconv_strip_axi3"
+FPGA_BITSTREAM_FILE    = TARGET + ".rbf"
+LINUX_KERNEL_RELEASE   = /^(\d+\.\d+)/.match(`uname -r`)[1]
+DEVICE_TREE_FILE       = TARGET + "_" + LINUX_KERNEL_RELEASE + ".dts"
+DEVICE_TREE_NAME       = "qconv_strip"
+DEVICE_TREE_DIRECTORY  = "/config/device-tree/overlays/" + DEVICE_TREE_NAME
+UIO_DEVICE_NAMES       = ["uio_qconv_strip"]
+UDMABUF_DEVICE_NAMES   = ["udmabuf-qconv-in", "udmabuf-qconv-out", "udmabuf-qconv-k", "udmabuf-qconv-th"]
 
 CC                     = "g++"
 CFLAGS                 = "-I ./include -Wpointer-arith"
-FPGA_BITSTREAM_FILE    = "qconv_strip_axi3.rbf"
-DEVICE_TREE_FILE       = "qconv_strip.dts"
-DEVICE_TREE_NAME       = "qconv_strip"
-DEVICE_TREE_DIRECTORY  = "/config/device-tree/overlays/#{DEVICE_TREE_NAME}"
-UIO_DEVICE_NAME        = "uio0"
-UDMABUF_DEVICE_FILES   = ["udmabuf-qconv-in", "udmabuf-qconv-out", "udmabuf-qconv-k", "udmabuf-qconv-th"]
+
+def find_uio_device(name)
+  found_device_name = nil
+  Dir::entries("/sys/class/uio").map{ |device_name|
+    if device_name =~ /^uio/
+      File.open("/sys/class/uio/#{device_name}/name"){|file|
+        if name.eql?(file.gets.chop)
+          found_device_name = device_name
+        end
+      }
+    end
+  }
+  return found_device_name
+end
 
 desc "Install fpga and devicetrees"
 task :install => ["/lib/firmware/#{FPGA_BITSTREAM_FILE}", DEVICE_TREE_FILE] do
@@ -20,23 +36,36 @@ task :install => ["/lib/firmware/#{FPGA_BITSTREAM_FILE}", DEVICE_TREE_FILE] do
   if (Dir.exist?(DEVICE_TREE_DIRECTORY) == false)
     abort "can not #{DEVICE_TREE_DIRECTORY} installed."
   end
-  device_file = "/dev/" + UIO_DEVICE_NAME
-  if (File.exist?(device_file) == false)
-    abort "can not #{device_file} installed."
-  end
-  File::chmod(0666, device_file)
-  UDMABUF_DEVICE_FILES.each do |device_file|
+
+  UIO_DEVICE_NAMES.each do |device_name|
+    device_file = find_uio_device(device_name)
+    if (device_file.nil?)
+      abort "can not find uio device file named #{device_name}"
+    end
     if (File.exist?("/dev/" + device_file) == false)
-      abort "can not #{device_file} installed."
+      abort "can not /dev/#{device_file} installed."
     end
     File::chmod(0666, "/dev/" + device_file)
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_mode")
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_offset")
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_size")
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_direction")
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_owner")
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_for_cpu")
-    File::chmod(0666, "/sys/class/udmabuf/" + device_file + "/sync_for_device")
+  end    
+
+  UDMABUF_DEVICE_NAMES.each do |device_file|
+    device_file_name = File.join("/", "dev", device_file)
+    if (File.exist?(device_file_name) == false)
+      abort "can not found #{device_file_name}"
+    end
+    File::chmod(0666, device_file_name)
+    ["udmabuf", "u-dma-buf"].each do |class_name|
+      sys_class_path = File.join("/", "sys", "class", class_name, device_file)
+      if (File.exist?(sys_class_path) == true) then
+        File::chmod(0666, File.join(sys_class_path, "sync_mode"      ))
+        File::chmod(0666, File.join(sys_class_path, "sync_offset"    ))
+        File::chmod(0666, File.join(sys_class_path, "sync_size"      ))
+        File::chmod(0666, File.join(sys_class_path, "sync_direction" ))
+        File::chmod(0666, File.join(sys_class_path, "sync_owner"     ))
+        File::chmod(0666, File.join(sys_class_path, "sync_for_cpu"   ))
+        File::chmod(0666, File.join(sys_class_path, "sync_for_device"))
+      end
+    end
   end
 end
 
@@ -48,12 +77,30 @@ task :uninstall do
   sh "dtbocfg.rb --remove #{DEVICE_TREE_NAME}"
 end
 
-file "/lib/firmware/#{FPGA_BITSTREAM_FILE}" => ["#{FPGA_BITSTREAM_FILE}"] do
+file "/lib/firmware/" + FPGA_BITSTREAM_FILE => [ FPGA_BITSTREAM_FILE ] do
   sh "cp #{FPGA_BITSTREAM_FILE} /lib/firmware/#{FPGA_BITSTREAM_FILE}"
 end
 
 directory DEVICE_TREE_DIRECTORY do
   Rake::Task["install"].invoke
+end
+
+file DEVICE_TREE_FILE => [ "qconv_strip.dts" ] do
+  linux_release_number = 0
+  /(\d+)\.(\d+)/.match(LINUX_KERNEL_RELEASE)[1..2].each do |n|
+    linux_release_number = linux_release_number*100 + n.to_i
+  end
+  File.open(DEVICE_TREE_FILE, "w") do |o_file|
+    File.open("qconv_strip.dts") do |i_file|
+      i_file.each_line do |line|
+        line = line.gsub(/(^\s*firmware-name\s*=\s*)(.*);/){"#{$1}\"#{FPGA_BITSTREAM_FILE}\";"}
+        if linux_release_number < 500 then
+          line = line.gsub(/(^\s*compatible\s*=\s*)("ikwzm,u-dma-buf");/){"#{$1}\"ikwzm,udmabuf-0.10.a\";"};
+        end
+        o_file.puts(line)
+      end
+    end
+  end
 end
 
 file "qconv_data_generator" => ["src/util/qconv_data_generator.cpp"] do
